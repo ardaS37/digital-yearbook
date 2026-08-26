@@ -1,0 +1,99 @@
+    </main>
+    <% if (!cookieConsent) { %>
+      <section class="cookie-banner">
+        <div class="cookie-banner-inner">
+          <div>
+            <strong>Çerez Politikası</strong>
+            <p>Bu site giriş oturumu ve güvenlik için zorunlu çerezler kullanır.</p>
+          </div>
+          <div class="cookie-banner-actions">
+            <a href="/cookie-policy">Detay</a>
+            <form action="/cookie-consent" method="post" class="inline-form">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <input type="hidden" name="choice" value="accepted" />
+              <input type="hidden" name="back_to" value="<%= currentUser ? '/' : '/login' %>" />
+              <button type="submit" class="btn small">Tamam</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    <% } %>
+    <% if (currentUser) { %>
+      <button id="scroll-top-btn" class="scroll-top-btn" aria-label="Yukarı çık" title="Yukarı çık">↑</button>
+    <% } %>
+    <footer class="site-footer">
+      <p class="footer-credit">© <%= new Date().getFullYear() %> Yıllık · <a href="https://github.com/arda-org" target="_blank" rel="noopener">Arda Saplıoğlu</a> tarafından hazırlanmıştır</p>
+    </footer>
+    <script src="/public/js/nav.js"></script>
+    <script src="/public/js/theme.js"></script>
+    <script src="/public/js/scroll-restore.js"></script>
+    <script src="/public/js/gallery.js"></script>
+    <script src="/public/js/easter-egg.js"></script>
+    <script src="/public/js/ui.js"></script>
+    <% if (currentUser) { %>
+    <script src="/public/js/bgm.js"></script>
+    <script type="module" nonce="<%= cspNonce %>">
+      /* SpessaSynth'i sadece enstrüman modunda yükle */
+      var mode;
+      try { mode = localStorage.getItem('bgmEnabled'); } catch(e) {}
+      if (mode === 'on' || mode === 'instrument') {
+        import('/public/js/spessasynth/index.js').then(function(m) {
+          window._SpessaSynthModule = m;
+          window._SpessaSynthClass = m.WorkletSynthesizer;
+        }).catch(function(e) { console.error('[BGM] SpessaSynth yüklenemedi:', e); });
+      }
+    </script>
+    <script nonce="<%= cspNonce %>">
+      (function () {
+        var mode;
+        try { mode = localStorage.getItem('bgmEnabled'); } catch (e) { return; }
+        /* Geriye dönük uyumluluk: eski 'on' değeri = 'instrument' */
+        if (mode === 'on') mode = 'instrument';
+        if (mode !== 'instrument' && mode !== 'oscillator') return;
+
+        BGM._mode = mode;
+        console.log('[BGM] Mod:', mode);
+
+        var files = <%- JSON.stringify(bgmFiles || []) %>;
+        if (!files.length) return;
+
+        BGM._pool = files; /* havuzu bgm.js'e aktar */
+
+        /* Yeni login ise sessionStorage'ı sıfırla → rastgele parça seç */
+        <% if (freshBgm) { %>
+        try { sessionStorage.removeItem('bgmFile'); sessionStorage.removeItem('bgmSongStart'); } catch(e) {}
+        <% } %>
+
+        /* Sekme oturumu boyunca aynı parça; yeni sekmede rastgele */
+        var bgmFile;
+        try {
+          bgmFile = sessionStorage.getItem('bgmFile');
+          if (!bgmFile || files.indexOf(bgmFile) === -1) {
+            bgmFile = files[Math.floor(Math.random() * files.length)];
+            sessionStorage.setItem('bgmFile', bgmFile);
+            sessionStorage.removeItem('bgmSongStart');
+          }
+        } catch (e) { bgmFile = files[0]; }
+
+        /* Şarkı konumunu koru (sayfa geçişlerinde kopma olmaz) */
+        var offsetMs = 0;
+        try {
+          var songStart = parseInt(sessionStorage.getItem('bgmSongStart') || '0', 10);
+          if (!songStart) {
+            songStart = Date.now();
+            sessionStorage.setItem('bgmSongStart', songStart.toString());
+          } else {
+            offsetMs = Date.now() - songStart;
+          }
+        } catch (e) {}
+
+        BGM.load('/public/audio/midi/' + bgmFile, function (loaded) {
+          if (!loaded) return;
+          if (BGM._duration > 0 && offsetMs > 0) offsetMs = offsetMs % BGM._duration;
+          BGM.startAt(offsetMs);
+        });
+      })();
+    </script>
+    <% } %>
+  </body>
+</html>

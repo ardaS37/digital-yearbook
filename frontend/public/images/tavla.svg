@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="tavla-title tavla-desc">
+  <title id="tavla-title">TAVLA oyun kartı</title>
+  <desc id="tavla-desc">TAVLA için ortak temada oyun kartı görseli.</desc>
+  <defs>
+    <linearGradient id="tavla-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4c2d24"/>
+      <stop offset="1" stop-color="#fb7185"/>
+    </linearGradient>
+    <linearGradient id="tavla-panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,255,255,.18)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,.06)"/>
+    </linearGradient>
+    <filter id="tavla-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#081018" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" fill="url(#tavla-bg)"/>
+  <circle cx="132" cy="92" r="118" fill="#fecdd3" opacity=".22"/>
+  <circle cx="830" cy="434" r="154" fill="#ffffff" opacity=".08"/>
+  <g filter="url(#tavla-shadow)">
+    <rect x="56" y="42" width="848" height="456" rx="34" fill="rgba(14,20,26,.18)"/>
+    <rect x="74" y="60" width="812" height="420" rx="28" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.16)"/>
+    <rect x="104" y="100" width="752" height="254" rx="26" fill="rgba(7,10,14,.18)" stroke="rgba(255,255,255,.12)"/>
+    
+    
+    <rect x="244" y="122" width="472" height="212" rx="26" fill="rgba(20,26,34,.22)"/>
+    <rect x="264" y="142" width="432" height="172" rx="18" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.16)"/>
+  
+    <rect x="318" y="168" width="324" height="124" rx="18" fill="#6b3e21"/>
+    <path d="M372 178l24 98 24-98M428 178l24 98 24-98M484 178l24 98 24-98M540 178l24 98 24-98" fill="#fef3c7" opacity=".84"/>
+    <path d="M400 178l24 98 24-98M456 178l24 98 24-98M512 178l24 98 24-98M568 178l24 98 24-98" fill="#1f2937" opacity=".88"/>
+    <rect x="346" y="206" width="46" height="46" rx="12" fill="#fff"/>
+    <circle cx="360" cy="220" r="4" fill="#111827"/><circle cx="378" cy="238" r="4" fill="#111827"/>
+    <rect x="584" y="206" width="46" height="46" rx="12" fill="#fff"/>
+    <circle cx="598" cy="220" r="4" fill="#111827"/><circle cx="616" cy="220" r="4" fill="#111827"/><circle cx="607" cy="238" r="4" fill="#111827"/>
+    <text x="118" y="405" fill="rgba(255,255,255,.72)" font-family="Verdana, sans-serif" font-size="16" font-weight="700" letter-spacing="3">ONLINE MASA OYUNU</text>
+    <text x="118" y="448" fill="#fff7ea" font-family="Georgia, serif" font-size="48" font-weight="700">TAVLA</text>
+  </g>
+</svg>

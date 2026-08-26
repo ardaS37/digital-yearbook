@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="otopark-title otopark-desc">
+  <title id="otopark-title">OTOPARK oyun kartı</title>
+  <desc id="otopark-desc">Unblock Red Wood temalı oyun kartı görseli.</desc>
+  <defs>
+    <linearGradient id="otopark-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f2418"/>
+      <stop offset="1" stop-color="#a15c2b"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b56534"/>
+      <stop offset="1" stop-color="#6e341d"/>
+    </linearGradient>
+    <filter id="otopark-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#130805" flood-opacity=".34"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" fill="url(#otopark-bg)"/>
+  <circle cx="142" cy="98" r="128" fill="#ffd37f" opacity=".12"/>
+  <circle cx="812" cy="422" r="168" fill="#fff6e4" opacity=".06"/>
+  <g filter="url(#otopark-shadow)">
+    <rect x="56" y="42" width="848" height="456" rx="34" fill="rgba(24,12,8,.18)"/>
+    <rect x="74" y="60" width="812" height="420" rx="28" fill="rgba(255,245,233,.08)" stroke="rgba(255,232,196,.16)"/>
+    <rect x="108" y="102" width="744" height="250" rx="26" fill="rgba(33,15,9,.18)" stroke="rgba(255,230,194,.12)"/>
+
+    <g transform="translate(210 126)">
+      <rect x="0" y="0" width="154" height="214" rx="26" fill="url(#wood)" stroke="#e0a36f" stroke-width="5"/>
+      <rect x="24" y="24" width="106" height="44" rx="18" fill="#d94b4b"/>
+      <rect x="24" y="78" width="106" height="44" rx="18" fill="#9f5a2d"/>
+      <rect x="24" y="132" width="106" height="44" rx="18" fill="#b36b3b"/>
+      <circle cx="77" cy="190" r="16" fill="#f7d8b4"/>
+    </g>
+    <g transform="translate(410 126)">
+      <rect x="0" y="0" width="154" height="214" rx="26" fill="url(#wood)" stroke="#e0a36f" stroke-width="5"/>
+      <rect x="24" y="24" width="106" height="44" rx="18" fill="#c85d3d"/>
+      <rect x="24" y="78" width="106" height="44" rx="18" fill="#d9753f"/>
+      <rect x="24" y="132" width="106" height="44" rx="18" fill="#8c4428"/>
+      <circle cx="77" cy="190" r="16" fill="#f7d8b4"/>
+    </g>
+    <g transform="translate(610 126)">
+      <rect x="0" y="0" width="154" height="214" rx="26" fill="url(#wood)" stroke="#e0a36f" stroke-width="5"/>
+      <rect x="24" y="24" width="106" height="44" rx="18" fill="#9f5a2d"/>
+      <rect x="24" y="78" width="106" height="44" rx="18" fill="#d94b4b"/>
+      <rect x="24" y="132" width="106" height="44" rx="18" fill="#b36b3b"/>
+      <circle cx="77" cy="190" r="16" fill="#f7d8b4"/>
+    </g>
+
+    <text x="118" y="405" fill="rgba(255,245,233,.78)" font-family="Verdana, sans-serif" font-size="16" font-weight="700" letter-spacing="3">ONLINE MASA OYUNU</text>
+    <text x="118" y="448" fill="#fff4e8" font-family="Georgia, serif" font-size="48" font-weight="700">OTOPARK</text>
+  </g>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="xox-title xox-desc">
+  <title id="xox-title">XOX oyun kartı</title>
+  <desc id="xox-desc">XOX için ortak temada oyun kartı görseli.</desc>
+  <defs>
+    <linearGradient id="xox-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f3f63"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="xox-panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,255,255,.18)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,.06)"/>
+    </linearGradient>
+    <filter id="xox-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#081018" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" fill="url(#xox-bg)"/>
+  <circle cx="132" cy="92" r="118" fill="#bfdbfe" opacity=".22"/>
+  <circle cx="830" cy="434" r="154" fill="#ffffff" opacity=".08"/>
+  <g filter="url(#xox-shadow)">
+    <rect x="56" y="42" width="848" height="456" rx="34" fill="rgba(14,20,26,.18)"/>
+    <rect x="74" y="60" width="812" height="420" rx="28" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.16)"/>
+    <rect x="104" y="100" width="752" height="254" rx="26" fill="rgba(7,10,14,.18)" stroke="rgba(255,255,255,.12)"/>
+    
+    
+    <rect x="244" y="122" width="472" height="212" rx="26" fill="rgba(20,26,34,.22)"/>
+    <rect x="264" y="142" width="432" height="172" rx="18" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.16)"/>
+  
+    <g stroke="#f8fafc" stroke-width="10" stroke-linecap="round">
+      <path d="M372 168v120M480 168v120M588 168v120"/>
+      <path d="M324 206h312M324 254h312"/>
+    </g>
+    <g fill="none" stroke-width="12" stroke-linecap="round">
+      <path d="M348 181l38 38m0-38-38 38" stroke="#f97316"/>
+      <circle cx="480" cy="200" r="25" stroke="#60a5fa"/>
+      <path d="M576 237l38 38m0-38-38 38" stroke="#f97316"/>
+      <circle cx="372" cy="256" r="25" stroke="#60a5fa"/>
+    </g>
+    <text x="118" y="405" fill="rgba(255,255,255,.72)" font-family="Verdana, sans-serif" font-size="16" font-weight="700" letter-spacing="3">ONLINE MASA OYUNU</text>
+    <text x="118" y="448" fill="#fff7ea" font-family="Georgia, serif" font-size="48" font-weight="700">XOX</text>
+  </g>
+</svg>

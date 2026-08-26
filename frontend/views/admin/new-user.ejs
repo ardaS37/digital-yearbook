@@ -1,0 +1,70 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow">
+  <h1>Kullanıcı Oluştur</h1>
+  <form method="post" action="/admin/users" class="stack-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <label for="role">Rol</label>
+    <select id="role" name="role" required>
+      <option value="student">Öğrenci</option>
+      <option value="teacher">Öğretmen</option>
+      <option value="other">Diğer</option>
+      <option value="admin">Yönetici</option>
+      <option value="guest">Misafir</option>
+    </select>
+
+    <label for="name">Ad Soyad</label>
+    <input id="name" name="name" required maxlength="120" />
+
+    <label for="student_number">Öğrenci Numarası (öğrenciler için)</label>
+    <input id="student_number" name="student_number" maxlength="50" />
+
+    <label for="school_id">Okul</label>
+    <select id="school_id" name="school_id">
+      <option value="">Okul seç</option>
+      <% schools.forEach(function(school) { %>
+        <option value="<%= school.id %>"><%= school.name %></option>
+      <% }) %>
+    </select>
+
+    <label for="class_branch">Sınıf Şubesi</label>
+    <select id="class_branch" name="class_branch">
+      <option value="">Yok</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>"><%= branch %></option>
+      <% }) %>
+    </select>
+
+    <label for="teacher_category">Öğretmen Alt Kategorisi</label>
+    <select id="teacher_category" name="teacher_category">
+      <% teacherCategories.forEach(function(item) { %>
+        <option value="<%= item.value %>"><%= item.label %></option>
+      <% }) %>
+    </select>
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="is_class_president" value="yes" /> Bu öğrenci sınıf başkanı olsun
+    </label>
+
+    <button type="submit" class="btn">Kullanıcı Oluştur</button>
+  </form>
+
+  <% if (generatedCode) { %>
+    <div class="notice success compact-top">
+      Yeni erişim kodu: <strong><%= generatedCode %></strong>
+    </div>
+  <% } %>
+
+  <% if (generatedLoginIdentifier) { %>
+    <div class="notice compact-top">
+      Giriş kimliği: <strong><%= generatedLoginIdentifier %></strong>
+    </div>
+  <% } %>
+
+  <% if (generatedCode) { %>
+    <div class="notice compact-top">
+      Bu bilgiler yalnızca şimdi gösterilir. Güvenli şekilde saklayın.
+    </div>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

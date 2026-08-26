@@ -1,0 +1,80 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+
+<section class="card archive-hero">
+  <p class="eyebrow">Salt Okunur Arşiv</p>
+  <h1><%= year.label %></h1>
+  <p class="subtle">Bu yıllık arşiv modunda normal sayfa gibi gezilebilir, ancak düzenleme ve yeni içerik ekleme kapalıdır.</p>
+  <div class="profile-badge-row compact-top">
+    <span class="profile-badge"><%= classes.length %> sınıf</span>
+    <span class="profile-badge"><%= classes.reduce(function(total, klass) { return total + klass.students.length; }, 0) %> öğrenci</span>
+    <span class="profile-badge">Arşiv: <%= year.archived_at || year.created_at %></span>
+  </div>
+  <p class="compact-top"><a class="btn small alt" href="/archive">Arşive Dön</a></p>
+</section>
+
+<% if (!classes.length) { %>
+  <section class="card">
+    <div class="empty-state">
+      <h3>Bu yılda sınıf yok</h3>
+      <p>Arşiv verisi boş görünüyor.</p>
+    </div>
+  </section>
+<% } else { %>
+  <nav class="section-jump">
+    <% classes.forEach(function(klass) { %>
+      <a href="#class-<%= encodeURIComponent(klass.branch) %>"><%= klass.branch %></a>
+    <% }) %>
+  </nav>
+
+  <% classes.forEach(function(klass) { %>
+    <section class="card class-theme-card" id="class-<%= encodeURIComponent(klass.branch) %>" style="--class-theme: <%= klass.theme_color || '#0d6e6e' %>;">
+      <div class="class-cover-shell">
+        <div class="class-cover-visual">
+          <% if (klass.cover_photo_path) { %>
+            <img src="<%= klass.cover_photo_path %>" alt="<%= klass.branch %>" class="class-cover-image" loading="lazy" />
+          <% } else { %>
+            <div class="class-cover-placeholder"><span><%= klass.branch %></span></div>
+          <% } %>
+        </div>
+        <div class="class-cover-content">
+          <p class="eyebrow">Arşiv Sınıfı</p>
+          <h2><%= klass.branch %></h2>
+          <p class="class-cover-slogan"><%= klass.class_slogan || 'Bu sınıf için slogan yok.' %></p>
+          <p class="subtle"><%= klass.students.length %> öğrenci</p>
+        </div>
+      </div>
+
+      <% if (!klass.students.length) { %>
+        <p class="compact-top">Bu sınıfta arşiv öğrenci kaydı yok.</p>
+      <% } else { %>
+        <div class="profile-grid compact-top">
+          <% klass.students.forEach(function(student) { %>
+            <a href="/archive/<%= year.id %>/profiles/<%= student.id %>" class="profile-card">
+              <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" loading="lazy" />
+              <h3><%= student.name %></h3>
+              <p><strong>No:</strong> <%= student.student_number || '-' %></p>
+              <p><strong>Slogan:</strong> <%= student.slogan || 'Henüz slogan yok.' %></p>
+            </a>
+          <% }) %>
+        </div>
+        <div class="archive-profile-list compact-top">
+          <% klass.students.forEach(function(student) { %>
+            <article class="archive-profile-preview">
+              <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" loading="lazy" />
+              <div>
+                <h3><a href="/archive/<%= year.id %>/profiles/<%= student.id %>"><%= student.name %></a></h3>
+                <p class="subtle"><%= student.student_number ? 'No: ' + student.student_number + ' / ' : '' %><%= student.birth_date ? 'Doğum günü: ' + student.birth_date : 'Arşiv profili' %></p>
+                <% if (student.slogan) { %><p><strong>Slogan:</strong> <%= student.slogan %></p><% } %>
+                <% if (student.bio) { %><p><strong>Biyografi:</strong> <%= student.bio %></p><% } %>
+                <% if (student.favorite_memory) { %><p><strong>Anı:</strong> <%= student.favorite_memory %></p><% } %>
+                <% if (student.free_text) { %><p class="profile-free-text"><strong>Serbest yazı:</strong> <%= student.free_text %></p><% } %>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  <% }) %>
+<% } %>
+
+<%- include('partials/footer') %>

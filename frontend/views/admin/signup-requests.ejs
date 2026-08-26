@@ -1,0 +1,41 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Hesap Başvuruları</h1>
+  <p class="compact-top"><a href="/admin" class="btn small alt">Yönetim Paneline Dön</a></p>
+</section>
+
+<section class="card">
+  <% if (!requests.length) { %>
+    <p>Bekleyen hesap başvurusu yok.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr><th>Tarih</th><th>Okul</th><th>Ad</th><th>Rol</th><th>Öğrenci No</th><th>Sınıf</th><th>Not</th><th>İşlem</th></tr>
+      </thead>
+      <tbody>
+        <% requests.forEach(function(item) { %>
+          <tr>
+            <td><%= item.created_at %></td>
+            <td><%= item.school_name || '-' %></td>
+            <td><%= item.name %></td>
+            <td><%= item.role === 'student' ? 'Öğrenci' : item.role === 'teacher' ? 'Öğretmen' : 'Diğer' %></td>
+            <td><%= item.student_number || '-' %></td>
+            <td><%= item.class_branch || '-' %></td>
+            <td><%= item.note || '-' %></td>
+            <td>
+              <form method="post" action="/admin/signup-requests/<%= item.id %>/approve" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button">Onayla</button>
+              </form>
+              <form method="post" action="/admin/signup-requests/<%= item.id %>/reject" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button danger">Reddet</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,162 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Yıllık Export</h1>
+  <p class="subtle">
+    Kitap düzeninde kapak, içindekiler, sınıf galerileri, öğrenci sayfaları, öğretmenler, mantar pano, okul galerisi ve kapanış bölümü üretir.
+  </p>
+  <p class="compact-top">
+    <% if (currentUser.role === 'admin') { %><a href="/admin" class="btn small alt">Yönetim Paneline Dön</a><% } %>
+    <a href="/admin/schools" class="btn small alt">Okul Ayarları</a>
+  </p>
+</section>
+
+<section class="card">
+  <h2>Kapak Ayarları</h2>
+  <form method="post" action="/admin/yearbook-book/settings?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="cover_title">Kapak Başlığı</label>
+    <input id="cover_title" name="cover_title" maxlength="120" value="<%= settings.coverTitle %>" />
+    <label for="cover_subtitle">Alt Başlık</label>
+    <input id="cover_subtitle" name="cover_subtitle" maxlength="180" value="<%= settings.coverSubtitle %>" />
+    <label for="cover_year">Yıl / Dönem</label>
+    <input id="cover_year" name="cover_year" maxlength="40" value="<%= settings.coverYear %>" />
+    <label for="prepared_by">Hazırlayan</label>
+    <input id="prepared_by" name="prepared_by" maxlength="120" value="<%= settings.preparedBy %>" />
+    <label for="theme_color">PDF Tema Rengi</label>
+    <input id="theme_color" type="color" name="theme_color" value="<%= settings.themeColor %>" />
+    <label for="cover_image">Kapak Görseli</label>
+    <% if (settings.coverImagePath) { %>
+      <p class="compact-top"><img src="<%= settings.coverImagePath %>" alt="Kapak görseli" class="admin-home-background-preview" /></p>
+      <label class="checkbox-line">
+        <input type="checkbox" name="remove_cover_image" value="yes" />
+        <span>Mevcut kapak görselini kaldır</span>
+      </label>
+    <% } %>
+    <input id="cover_image" type="file" name="cover_image" accept="image/*" />
+    <label for="intro_text">Kapak / Önsöz Metni</label>
+    <textarea id="intro_text" name="intro_text" maxlength="1200"><%= settings.introText %></textarea>
+
+    <div class="subtle-card">
+      <h3>Bölümler</h3>
+      <p class="subtle">Bölüm sırası için virgüllü anahtar kullan: classes, teachers, others, anonymous, gallery, closing</p>
+      <input name="section_order" value="<%= settings.sectionOrder.join(', ') %>" />
+      <div class="stack-list compact-top">
+        <% [
+          ['classes', 'Sınıflar ve öğrenciler'],
+          ['teachers', 'Öğretmenler'],
+          ['others', 'Diğer profiller'],
+          ['anonymous', 'Mantar pano'],
+          ['gallery', 'Okul galerisi'],
+          ['closing', 'Kapanış']
+        ].forEach(function(item) { %>
+          <label class="checkbox-line">
+            <input type="checkbox" name="include_sections" value="<%= item[0] %>" <%= settings.sectionOrder.includes(item[0]) ? 'checked' : '' %> />
+            <span><%= item[1] %></span>
+          </label>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="subtle-card">
+      <h3>Mesaj Limiti</h3>
+      <p class="subtle">Kişi başı export'a dahil edilecek maksimum mesaj sayısı. <strong>0 = sınırsız</strong>. Öncelikli işaretlenen mesajlar önce alınır.</p>
+      <label for="message_limit">Kişi başı maksimum mesaj sayısı</label>
+      <input id="message_limit" type="number" name="message_limit" min="0" max="999" value="<%= settings.messageLimit %>" style="max-width:120px;" />
+    </div>
+
+    <div class="subtle-card">
+      <h3>Profil Alanları</h3>
+      <div class="stack-list">
+        <% [
+          ['slogan', 'Slogan'],
+          ['bio', 'Biyografi'],
+          ['free_text', 'Serbest yazı'],
+          ['favorite_memory', 'Anı'],
+          ['favorite_quote', 'Alıntı'],
+          ['birth_date', 'Doğum günü'],
+          ['contact', 'İletişim'],
+          ['three_words', '3 kelime'],
+          ['messages', 'Yıllık mesajları'],
+          ['likes', 'Beğeni sayısı'],
+          ['guestbook', 'Ziyaretçi defteri']
+        ].forEach(function(item) { %>
+          <label class="checkbox-line">
+            <input type="checkbox" name="profile_fields" value="<%= item[0] %>" <%= settings.profileFields.includes(item[0]) ? 'checked' : '' %> />
+            <span><%= item[1] %></span>
+          </label>
+        <% }) %>
+      </div>
+    </div>
+    <button type="submit" class="btn small">Kapak Ayarlarını Kaydet</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Kitap Çıktısı</h2>
+  <form id="yearbook-export-form" method="get" action="/admin/yearbook-book.html" class="stack-form compact-top">
+    <% if (canChooseSchool) { %>
+      <label for="school_id">Okul</label>
+      <select id="school_id" name="school_id">
+        <% schools.forEach(function(school) { %>
+          <option value="<%= school.id %>" <%= Number(selectedSchoolId) === Number(school.id) ? 'selected' : '' %>><%= school.name %></option>
+        <% }) %>
+      </select>
+    <% } else { %>
+      <input type="hidden" name="school_id" value="<%= selectedSchoolId || '' %>" />
+    <% } %>
+    <label for="class_branch">Kapsam</label>
+    <select id="class_branch" name="class_branch">
+      <option value="">Tüm okul</option>
+      <% allClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>"><%= branch %></option>
+      <% }) %>
+    </select>
+    <div class="inline-actions">
+      <button type="submit" class="btn">Kitap HTML Önizle</button>
+      <button id="yearbook-pdf-button" type="submit" formaction="/admin/yearbook-book.pdf" class="btn alt">PDF İndir</button>
+    </div>
+  </form>
+  <div id="yearbook-export-progress" class="export-progress" hidden>
+    <div class="export-progress-header">
+      <strong>PDF hazırlanıyor</strong>
+      <span id="yearbook-export-percent">0%</span>
+    </div>
+    <div class="export-progress-track"><span id="yearbook-export-bar"></span></div>
+    <p class="subtle compact-top">Büyük okul çıktılarında fotoğraflar ve profil sayfaları nedeniyle işlem uzun sürebilir. Sayfayı kapatma.</p>
+  </div>
+  <p class="subtle compact-top">
+    PDF üretimi Chrome headless ile yapılır. Sistem PDF üretemezse HTML önizlemeyi açıp tarayıcıdan “PDF olarak kaydet” kullanabilirsiniz.
+  </p>
+</section>
+<script nonce="<%= cspNonce %>">
+  (function () {
+    var form = document.getElementById('yearbook-export-form');
+    var progress = document.getElementById('yearbook-export-progress');
+    var bar = document.getElementById('yearbook-export-bar');
+    var percent = document.getElementById('yearbook-export-percent');
+    var schoolSelect = document.getElementById('school_id');
+    if (schoolSelect) {
+      schoolSelect.addEventListener('change', function () {
+        window.location.href = '/admin/yearbook-book?school_id=' + encodeURIComponent(schoolSelect.value);
+      });
+    }
+    if (!form || !progress || !bar || !percent) return;
+    form.addEventListener('submit', function (event) {
+      var submitter = event.submitter;
+      var action = submitter && submitter.getAttribute('formaction');
+      if (!action || action.indexOf('.pdf') === -1) return;
+      var value = 0;
+      progress.hidden = false;
+      bar.style.width = '0%';
+      percent.textContent = '0%';
+      submitter.disabled = true;
+      submitter.textContent = 'PDF hazırlanıyor...';
+      window.setInterval(function () {
+        value = Math.min(92, value + (value < 55 ? 7 : value < 80 ? 3 : 1));
+        bar.style.width = value + '%';
+        percent.textContent = value + '%';
+      }, 850);
+    });
+  })();
+</script>
+<%- include('../partials/footer') %>

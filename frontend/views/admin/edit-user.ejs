@@ -1,0 +1,152 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<% const isPhotoLocked = user.photo_locked === true || Number(user.photo_locked) === 1; %>
+<% const isCoverLocked = user.profile_cover_locked === true || Number(user.profile_cover_locked) === 1; %>
+<% const isOptedOut = user.yearbook_opt_out === true || Number(user.yearbook_opt_out) === 1; %>
+<section class="card narrow">
+  <h1>Kullanıcı Düzenle</h1>
+  <form method="post" action="/admin/users/<%= user.id %>" class="stack-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <label for="name">Ad Soyad</label>
+    <input id="name" name="name" required maxlength="120" value="<%= user.name %>" />
+
+    <label for="student_number">Öğrenci Numarası</label>
+    <input id="student_number" name="student_number" maxlength="50" value="<%= user.student_number || '' %>" />
+
+    <label for="school_id">Okul</label>
+    <select id="school_id" name="school_id">
+      <option value="">Okul yok</option>
+      <% schools.forEach(function(school) { %>
+        <option value="<%= school.id %>" <%= user.school_id === school.id ? 'selected' : '' %>><%= school.name %></option>
+      <% }) %>
+    </select>
+
+    <label for="class_branch">Sınıf Şubesi</label>
+    <select id="class_branch" name="class_branch">
+      <option value="">Yok</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>" <%= user.class_branch === branch ? 'selected' : '' %>><%= branch %></option>
+      <% }) %>
+    </select>
+
+    <label for="birth_date">Doğum Tarihi</label>
+    <input id="birth_date" type="date" name="birth_date" value="<%= user.birth_date || '' %>" />
+
+    <% if (user.role === 'teacher') { %>
+      <label for="teacher_category">Öğretmen Alt Kategorisi</label>
+      <select id="teacher_category" name="teacher_category">
+        <% teacherCategories.forEach(function(item) { %>
+          <option value="<%= item.value %>" <%= (user.teacher_category || 'other') === item.value ? 'selected' : '' %>><%= item.label %></option>
+        <% }) %>
+      </select>
+    <% } %>
+
+    <% if (user.role === 'student') { %>
+      <label class="checkbox-line">
+        <input type="checkbox" name="is_class_president" value="yes" <%= user.president_class_branch ? 'checked' : '' %> /> Sınıf başkanı
+      </label>
+    <% } %>
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="reset_code" value="yes" disabled /> Erişim kodunu sıfırla
+    </label>
+
+    <p class="subtle">Kod sıfırlama artık ayrı onay ekranından yapılır.</p>
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="photo_locked" value="yes" <%= isPhotoLocked ? 'checked' : '' %> /> Profil fotoğrafını sabitle (kullanıcı değiştiremesin)
+    </label>
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="yearbook_opt_out" value="yes" <%= isOptedOut ? 'checked' : '' %> /> Yıllık katılımını kapat (adı gizlenir, mesaj alamaz)
+    </label>
+
+    <button type="submit" class="btn">Değişiklikleri Kaydet</button>
+  </form>
+
+  <div class="notice compact-top">
+    Giriş kimliği: <strong><%= user.login_identifier %></strong>
+  </div>
+
+  <div class="notice compact-top">
+    Güvenlik nedeniyle mevcut erişim kodu saklanmıyor. Yeni kod görmek için "Erişim kodunu sıfırla" seçeneğini kullanın.
+  </div>
+
+  <% if (resetCode) { %>
+    <div class="notice success compact-top">
+      Yeni erişim kodu: <strong><%= resetCode %></strong>
+    </div>
+  <% } %>
+
+  <p class="compact-top">
+    <a class="btn alt" href="/admin/confirm?action=reset-user-code&target_id=<%= user.id %>&back_to=<%= encodeURIComponent('/admin/users/' + user.id + '/edit') %>">Erişim Kodunu Sıfırla</a>
+  </p>
+</section>
+
+<section class="card narrow">
+  <h2>KVKK Onay Durumu</h2>
+  <% if (user.kvkk_approved_at) { %>
+    <p class="compact-top">Onay tarihi: <strong><%= new Date(user.kvkk_approved_at).toLocaleString('tr-TR') %></strong></p>
+    <form method="post" action="/admin/users/<%= user.id %>/reset-kvkk" class="inline-form compact-top" onsubmit="return confirm('Bu kullanıcının KVKK onayını sıfırlamak istediğinize emin misiniz? Bir sonraki girişte tekrar onay isteyecek.')">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button type="submit" class="link-button danger">KVKK Onayını Sıfırla</button>
+    </form>
+  <% } else { %>
+    <p class="compact-top subtle">Bu kullanıcı henüz KVKK onayı vermemiş veya onayı sıfırlanmış.</p>
+  <% } %>
+</section>
+
+<section class="card narrow">
+  <h2>Profil Fotoğrafını Yönet</h2>
+  <% if (user.photo_path) { %>
+    <img src="<%= user.photo_path %>" alt="Profil fotoğrafı" class="profile-photo" />
+  <% } %>
+
+  <form method="post" action="/admin/users/<%= user.id %>/photo?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+    <label for="photo">Yeni Fotoğraf (isteğe bağlı)</label>
+    <input id="photo" type="file" name="photo" accept="image/*" />
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="photo_locked" value="yes" <%= isPhotoLocked ? 'checked' : '' %> /> Fotoğrafı güncelle ve sabitle
+    </label>
+
+    <button type="submit" class="btn">Fotoğraf Ayarını Kaydet</button>
+  </form>
+
+  <% if (user.photo_path) { %>
+    <form method="post" action="/admin/users/<%= user.id %>/photo" class="inline-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="remove_photo" value="yes" />
+      <input type="hidden" name="photo_locked" value="<%= isPhotoLocked ? 'yes' : 'no' %>" />
+      <button type="submit" class="link-button danger">Profil Fotoğrafını Sil</button>
+    </form>
+  <% } %>
+</section>
+
+<section class="card narrow">
+  <h2>Profil Kapağını Yönet</h2>
+  <% if (user.profile_cover_path) { %>
+    <img src="<%= user.profile_cover_path %>" alt="Profil kapağı" class="admin-home-background-preview" />
+  <% } %>
+
+  <form method="post" action="/admin/users/<%= user.id %>/cover?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+    <label for="cover_photo">Yeni Kapak / Banner (isteğe bağlı)</label>
+    <input id="cover_photo" type="file" name="cover_photo" accept="image/*" />
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="profile_cover_locked" value="yes" <%= isCoverLocked ? 'checked' : '' %> /> Kapağı kilitle (kullanıcı değiştiremesin)
+    </label>
+
+    <button type="submit" class="btn">Kapak Ayarını Kaydet</button>
+  </form>
+
+  <% if (user.profile_cover_path) { %>
+    <form method="post" action="/admin/users/<%= user.id %>/cover" class="inline-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="remove_cover" value="yes" />
+      <input type="hidden" name="profile_cover_locked" value="<%= isCoverLocked ? 'yes' : 'no' %>" />
+      <button type="submit" class="link-button danger">Profil Kapağını Sil</button>
+    </form>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

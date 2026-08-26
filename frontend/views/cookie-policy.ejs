@@ -1,0 +1,41 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow">
+  <h1>Çerez ve Tarayıcı Depolama Politikası</h1>
+  <p>Bu uygulama, çalışması için zorunlu olan çerezleri ve tarayıcı depolamasını kullanır. Analitik, reklam veya üçüncü taraf izleme çerezi kullanılmaz.</p>
+
+  <h2 class="compact-top">Çerezler</h2>
+  <p class="subtle">Tarayıcınızda saklanan, sunucuya her istekte gönderilen verilerdir.</p>
+  <ul>
+    <li><strong>yearbook.sid</strong> — Oturum çerezi. Giriş yapıldığında oluşturulur, çıkış yapılınca silinir. Sunucu taraflı oturumu açık tutar.</li>
+    <li><strong>yearbook_cookie_consent</strong> — Çerez bilgilendirme ekranının tekrar gösterilmemesi için kullanılır. 1 yıl geçerlidir.</li>
+  </ul>
+
+  <h2 class="compact-top">localStorage <span class="subtle" style="font-size:.85em;font-weight:400">(tarayıcıda kalıcı)</span></h2>
+  <p class="subtle">Sunucuya gönderilmez, yalnızca bu cihazda saklanır. Tarayıcı verilerini temizleyene kadar devam eder.</p>
+  <ul>
+    <li><strong>bgmEnabled</strong> — Arkaplan müziği tercihi (<em>instrument</em>, <em>oscillator</em> veya <em>off</em>).</li>
+    <li><strong>bgmSF2Cached</strong> — Müzik ses fontu daha önce indirildiyse belirlenir; ilk yükleme bildirimi tekrar gösterilmez.</li>
+    <li><strong>themePreference</strong> — Tema tercihi (<em>light</em>, <em>dark</em> veya <em>system</em>).</li>
+    <li><strong>userAccentColor</strong> — Kullanıcının seçtiği sabit vurgu rengi.</li>
+    <li><strong>defaultAccentMode</strong> — Vurgu rengi modu (<em>default</em> seçiliyse saklanır).</li>
+    <li><strong>liquidGlassOverride</strong> — Cam efekti kullanıcı tercihi (<em>on</em> veya <em>off</em>).</li>
+  </ul>
+
+  <h2 class="compact-top">sessionStorage <span class="subtle" style="font-size:.85em;font-weight:400">(sekme kapanınca silinir)</span></h2>
+  <p class="subtle">Sunucuya gönderilmez. Sekme veya tarayıcı kapatıldığında otomatik silinir.</p>
+  <ul>
+    <li><strong>bgmFile</strong> — Mevcut sekmede çalan MIDI parçasının adı. Sayfa geçişlerinde müziğin kesilmeden devam etmesi için kullanılır.</li>
+    <li><strong>bgmSongStart</strong> — Mevcut parçanın başlangıç zamanı. Sayfa geçişlerinde müzik konumunu korumak için kullanılır.</li>
+    <li><strong>sessionAccentColor</strong> — Oturum süresince tutarlı rastgele vurgu rengi.</li>
+  </ul>
+
+  <p class="subtle compact-top">Bu verilerin hiçbiri üçüncü taraflarla paylaşılmaz veya sunucu tarafında saklanmaz.</p>
+
+  <form action="/cookie-consent" method="post" class="inline-form compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input type="hidden" name="choice" value="accepted" />
+    <input type="hidden" name="back_to" value="/" />
+    <button type="submit" class="btn">Tamam</button>
+  </form>
+</section>
+<%- include('partials/footer') %>

@@ -1,0 +1,28 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Öğrenciler</h1>
+  <div class="class-filter">
+    <a class="chip <%= !selectedClass ? 'active' : '' %>" href="/students">Tümü</a>
+    <% allowedClasses.forEach(function(branch) { %>
+      <a class="chip <%= selectedClass === branch ? 'active' : '' %>" href="/students?class=<%= branch %>"><%= branch %></a>
+    <% }); %>
+  </div>
+
+  <% if (!students.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Öğrenci bulunamadı</h3>
+      <p>Seçili sınıfta görüntülenecek öğrenci yok. Başka bir sınıf filtresi deneyebilirsin.</p>
+    </div>
+  <% } else { %>
+    <div class="profile-grid">
+      <% students.forEach(function(student) { %>
+        <a href="/profiles/<%= student.id %>" class="profile-card">
+          <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" />
+          <h3><%= student.name %></h3>
+          <p><%= student.class_branch %> - <%= student.student_number %></p>
+        </a>
+      <% }); %>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

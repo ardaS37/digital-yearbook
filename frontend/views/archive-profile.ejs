@@ -1,0 +1,199 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce, pageThemeColor }) %>
+<% if (pageThemeColor && pageThemeAltColor) { %>
+  <style nonce="<%= cspNonce %>">
+    .profile-theme-scope {
+      --profile-accent: <%= pageThemeColor %>;
+      --profile-accent-alt: <%= pageThemeAltColor %>;
+    }
+  </style>
+<% } %>
+<%
+  const fixedContactItems = [
+    { label: 'Telefon', value: profile.contact_phone, href: profile.contact_phone ? `tel:${profile.contact_phone}` : '' },
+    { label: 'E-posta', value: profile.contact_email, href: profile.contact_email ? `mailto:${profile.contact_email}` : '' },
+    { label: 'Instagram', value: profile.contact_instagram, href: profile.contact_instagram ? `https://instagram.com/${String(profile.contact_instagram).replace(/^@/, '')}` : '' },
+    { label: 'X', value: profile.contact_x, href: profile.contact_x ? `https://x.com/${String(profile.contact_x).replace(/^@/, '')}` : '' },
+    { label: 'Facebook', value: profile.contact_facebook, href: profile.contact_facebook || '' },
+    { label: 'LinkedIn', value: profile.contact_linkedin, href: profile.contact_linkedin || '' }
+  ].filter(function(item) { return item.value; });
+  const contactItems = fixedContactItems.concat(customContactItems || []);
+  const roleLabel = profile.role === 'student' ? 'Öğrenci' : profile.role === 'teacher' ? 'Öğretmen' : profile.role === 'guest' ? 'Misafir' : profile.role === 'other' ? 'Diğer' : 'Yönetici';
+  function formatShortDateTime(value) {
+    if (!value) return '';
+    const text = String(value);
+    const match = text.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (match) return `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]}`;
+    return text.replace('T', ' ').replace(/\.\d+.*/, '').replace(/:\d{2}$/, '');
+  }
+%>
+
+<div class="profile-theme-scope">
+  <section class="card profile-cover-card" <% if (pageThemeColor) { %>style="border-top: 8px solid <%= pageThemeColor %>;"<% } %>>
+    <div class="flash compact-top">Bu arşiv profili salt okunur modda gösteriliyor. Düzenleme, mesaj, yorum ve yükleme kapalı.</div>
+    <div class="profile-cover-media">
+      <% if (profile.profile_cover_path) { %>
+        <img src="<%= profile.profile_cover_path %>" alt="<%= profile.name %> kapak görseli" loading="lazy" />
+      <% } else { %>
+        <div class="profile-cover-fallback">
+          <span>Arşiv Profili</span>
+        </div>
+      <% } %>
+    </div>
+    <div class="profile-head profile-head-overlay">
+      <img class="profile-photo" src="<%= profile.photo_path || '/public/default-avatar.svg' %>" alt="<%= profile.name %>" loading="lazy" />
+      <div class="profile-hero-content">
+        <div class="profile-title-row">
+          <div>
+            <span class="profile-eyebrow"><%= year.label %> Arşivi</span>
+            <h1><%= profile.name %></h1>
+          </div>
+        </div>
+        <div class="profile-badge-row">
+          <span class="profile-badge"><%= roleLabel %></span>
+          <% if (profile.class_branch) { %><span class="profile-badge">Sınıf: <%= profile.class_branch %></span><% } %>
+          <% if (profile.student_number) { %><span class="profile-badge">No: <%= profile.student_number %></span><% } %>
+          <% if (profile.birth_date) { %><span class="profile-badge">Doğum günü: <%= profile.birth_date %></span><% } %>
+          <span class="profile-badge">Beğeni: <%= profileLikeCount %></span>
+        </div>
+        <div class="profile-hero-grid">
+          <div class="profile-slogan-card">
+            <span>Slogan</span>
+            <strong><%= profile.slogan || 'Henüz slogan yok.' %></strong>
+          </div>
+          <div class="profile-stat-card">
+            <span>Arşiv Yılı</span>
+            <strong><%= year.label %></strong>
+          </div>
+          <div class="profile-stat-card">
+            <span>Son güncelleme</span>
+            <strong><%= formatShortDateTime(profile.updated_at || profile.created_at) %></strong>
+          </div>
+        </div>
+        <% if (profile.favorite_quote) { %>
+          <p class="profile-quote-line">"<%= profile.favorite_quote %>"</p>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <nav class="section-jump profile-jump">
+    <a href="/archive/<%= year.id %>">Arşive Dön</a>
+    <% if (profile.class_branch) { %><a href="/archive/<%= year.id %>#class-<%= encodeURIComponent(profile.class_branch) %>">Sınıfa Dön</a><% } %>
+    <a href="#ozet">Özet</a>
+    <% if (contactItems.length) { %><a href="#iletisim">İletişim</a><% } %>
+    <% if (threeWords.length) { %><a href="#uc-kelime">3 Kelime</a><% } %>
+    <a href="#yorumlar">Yıllık Mesajları</a>
+    <% if (guestbookEntries.length) { %><a href="#ziyaretci-defteri">Ziyaretçi Defteri</a><% } %>
+  </nav>
+
+  <section class="card profile-tabs-card" id="ozet" <% if (pageThemeColor) { %>style="border-left: 6px solid <%= pageThemeColor %>;"<% } %>>
+    <div class="tabs-nav">
+      <button type="button" class="tab-button is-active" data-tab-target="summary">Özet</button>
+      <button type="button" class="tab-button" data-tab-target="memory">Anı</button>
+    </div>
+    <div class="tab-panel is-active" data-tab-panel="summary">
+      <div class="empty-state subtle-card">
+        <h2>Kısa Biyografi</h2>
+        <p><%= profile.bio || 'Bu profil için henüz kısa bir biyografi eklenmedi.' %></p>
+      </div>
+      <% if (profile.free_text) { %>
+        <div class="empty-state subtle-card compact-top">
+          <h2>Serbest Yazı Alanı</h2>
+          <p class="profile-free-text"><%= profile.free_text %></p>
+        </div>
+      <% } %>
+    </div>
+    <div class="tab-panel" data-tab-panel="memory">
+      <div class="empty-state subtle-card">
+        <h2>En Sevdiği Anı</h2>
+        <p><%= profile.favorite_memory || 'Henüz bir anı paylaşılmadı.' %></p>
+      </div>
+    </div>
+  </section>
+
+  <% if (threeWords.length) { %>
+    <section class="card" id="uc-kelime">
+      <h2>3 Kelime Yorumları</h2>
+      <div class="tag-cloud compact-top">
+        <% threeWords.forEach(function(item) { %>
+          <span class="chip"><%= item.words %> - <%= item.author_name %></span>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (contactItems.length) { %>
+    <section class="card" id="iletisim">
+      <h2>İletişim</h2>
+      <div class="tag-cloud compact-top">
+        <% contactItems.forEach(function(item) { %>
+          <span class="chip">
+            <strong><%= item.label %>:</strong>
+            <% if (item.href) { %>
+              <a href="<%= item.href %>" target="_blank" rel="noopener noreferrer"><%= item.value %></a>
+            <% } else { %>
+              <%= item.value %>
+            <% } %>
+          </span>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <section class="card" id="yorumlar">
+    <h2>Yıllık Mesajları</h2>
+    <% if (!messages.length) { %>
+      <div class="empty-state compact-top">
+        <h3>Henüz mesaj yok</h3>
+        <p>Bu arşiv profilinde kayıtlı yıllık mesajı görünmüyor.</p>
+      </div>
+    <% } else { %>
+      <ul class="message-list compact-top">
+        <% messages.forEach(function(item) { %>
+          <li class="message-card">
+            <img class="message-author-photo" src="<%= item.sender_photo_path || '/public/default-avatar.svg' %>" alt="<%= item.sender_name %>" loading="lazy" />
+            <div class="message-card-content">
+              <strong><%= item.sender_name %></strong>
+              <div><%= item.message %></div>
+              <small><%= item.updated_at || item.created_at %></small>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
+  <% if (guestbookEntries.length) { %>
+    <section class="card" id="ziyaretci-defteri">
+      <h2>Ziyaretçi Defteri</h2>
+      <div class="stack-list compact-top">
+        <% guestbookEntries.forEach(function(item) { %>
+          <article class="notice">
+            <strong><%= item.author_name %></strong>
+            <p><%= item.body %></p>
+            <p class="subtle"><%= item.updated_at || item.created_at %></p>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+</div>
+
+<script nonce="<%= cspNonce %>">
+  (function () {
+    var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-tab-target]'));
+    var panels = Array.prototype.slice.call(document.querySelectorAll('[data-tab-panel]'));
+    if (!buttons.length || !panels.length) return;
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var target = button.getAttribute('data-tab-target');
+        buttons.forEach(function (item) { item.classList.toggle('is-active', item === button); });
+        panels.forEach(function (panel) {
+          panel.classList.toggle('is-active', panel.getAttribute('data-tab-panel') === target);
+        });
+      });
+    });
+  })();
+</script>
+
+<%- include('partials/footer') %>

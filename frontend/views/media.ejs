@@ -1,0 +1,507 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Fotoğraf Galerisi</h1>
+  <datalist id="gallery-user-tags">
+    <% taggableUsers.forEach(function(user) { %>
+      <option value="<%= user.id %>"><%= user.name %> <% if (user.class_branch) { %>(<%= user.class_branch %>)<% } %></option>
+    <% }) %>
+  </datalist>
+
+  <div class="class-filter">
+    <a class="chip <%= classFilter === 'general' ? 'active' : '' %>" href="/gallery?class=general">Genel</a>
+    <% allowedClasses.forEach(function(branch) { %>
+      <a class="chip <%= classFilter === branch ? 'active' : '' %>" href="/gallery?class=<%= branch %>"><%= branch %></a>
+    <% }) %>
+  </div>
+
+  <form method="get" action="/gallery" class="gallery-toolbar compact-top">
+    <input type="hidden" name="class" value="<%= classFilter %>" />
+    <div class="gallery-toolbar-fields">
+      <input type="date" name="date_from" value="<%= dateFrom %>" />
+      <select name="album_id">
+        <option value="">Tüm Albümler</option>
+        <% albums.forEach(function(album) { %>
+          <option value="<%= album.id %>" <%= selectedAlbum && selectedAlbum.id === album.id ? 'selected' : '' %>><%= album.title %></option>
+        <% }) %>
+      </select>
+      <select name="sort">
+        <option value="recent" <%= sort === 'recent' ? 'selected' : '' %>>En Yeni</option>
+        <% if (featureFlags.view_counts !== false) { %>
+          <option value="views" <%= sort === 'views' ? 'selected' : '' %>>En Çok Görüntülenen</option>
+        <% } %>
+      </select>
+    </div>
+    <div class="gallery-toolbar-actions">
+      <button type="submit" class="btn">Uygula</button>
+      <a href="/gallery/upload?class=<%= classFilter %>" class="btn alt">Fotoğraf Yükleme Sayfasını Aç</a>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Öne Çıkan Albümler</h2>
+  <% if (!albums.length) { %>
+    <div class="empty-state">
+      <h3>Henüz albüm yok</h3>
+      <p>İlk albümü oluşturup fotoğrafları düzenli gruplar halinde yayınlayabilirsiniz.</p>
+    </div>
+  <% } else { %>
+    <div class="album-grid">
+      <% albums.forEach(function(album) { %>
+        <a class="album-card <%= selectedAlbum && selectedAlbum.id === album.id ? 'is-active' : '' %>" href="/gallery?class=<%= classFilter %>&album_id=<%= album.id %>">
+          <div class="album-card-media">
+            <% if (album.cover_photo_path) { %>
+              <img src="<%= album.cover_photo_path %>" alt="<%= album.title %> albüm kapağı" loading="lazy" />
+            <% } else { %>
+              <div class="album-card-fallback"><span><%= album.title %></span></div>
+            <% } %>
+          </div>
+          <div class="album-card-body">
+            <strong><%= album.title %></strong>
+            <p class="subtle"><%= album.album_type === 'class' ? 'Sınıf albümü' : 'Okul albümü' %><% if (album.class_branch) { %> - <%= album.class_branch %><% } %></p>
+            <% if (album.description) { %><p><%= album.description %></p><% } %>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<% if (selectedAlbum && selectedAlbumCanManage) { %>
+  <section class="card">
+    <h2>Albüm Yönetimi</h2>
+    <p class="subtle">Seçili albüm: <strong><%= selectedAlbum.title %></strong></p>
+    <div class="grid two compact-top">
+      <form method="post" action="/media/albums/<%= selectedAlbum.id %>/update" class="stack-form subtle-card">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+        <label>Albüm Adı</label>
+        <input name="title" maxlength="120" value="<%= selectedAlbum.title %>" required />
+        <label>Açıklama</label>
+        <input name="description" maxlength="300" value="<%= selectedAlbum.description || '' %>" />
+        <button type="submit" class="btn small">Albümü Güncelle</button>
+      </form>
+      <form method="post" action="/media/albums/<%= selectedAlbum.id %>/delete" class="stack-form subtle-card" onsubmit="return confirm('Albüm silinsin mi? Fotoğraflar silinmez, sadece albüm bağlantısı kaldırılır.')">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+        <h3>Albümü Sil</h3>
+        <p class="subtle">Fotoğraflar galeride kalır. Sadece albüm kartı ve fotoğrafların albüm bağlantısı kaldırılır.</p>
+        <button type="submit" class="btn small danger">Albümü Sil</button>
+      </form>
+    </div>
+  </section>
+<% } %>
+
+<% if (featureFlags.view_counts !== false) { %>
+  <section class="card">
+    <h2>En Çok Görüntülenen Fotoğraflar</h2>
+    <% if (!topViewedPhotos.length) { %>
+      <div class="empty-state">
+        <h3>Henüz görüntüleme verisi yok</h3>
+        <p>Fotoğraflar açıldıkça burada öne çıkacaklar.</p>
+      </div>
+    <% } else { %>
+      <div class="top-viewed-grid">
+        <% topViewedPhotos.forEach(function(photo) { %>
+          <div class="mini-photo-card">
+            <img src="<%= photo.photo_path %>" alt="Çok görüntülenen fotoğraf" class="gallery-preview" data-full-image="<%= photo.photo_path %>" data-photo-id="<%= photo.id %>" loading="lazy" />
+            <small><%= photo.view_count %> görüntüleme</small>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+<% } %>
+
+<section class="card">
+  <h2>Yüklenen Fotoğraflar</h2>
+              <% if (featureFlags.photo_reactions !== false && currentUser.role !== 'guest') { %>
+    <form method="post" action="/media/albums/assign" id="album-assign-form" class="stack-form selection-dock compact-top" data-selection-dock hidden>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+      <div data-selected-photo-container></div>
+      <p class="selection-dock-title"><strong><span data-selection-count>0</span> öge seçildi</strong></p>
+      <div class="inline-actions">
+        <select name="album_id">
+          <option value="">Albüm seç</option>
+          <% albums.forEach(function(album) { %>
+            <option value="<%= album.id %>"><%= album.title %></option>
+          <% }) %>
+        </select>
+        <input name="new_album_title" maxlength="120" placeholder="veya yeni albüm adı" />
+        <button type="submit" class="btn small">Seçilenleri Albüme Ekle</button>
+      </div>
+    </form>
+  <% } %>
+  <% if (currentUser.role === 'admin') { %>
+    <form method="post" action="/media/collage/create" id="collage-selection-form" class="stack-form selection-dock compact-top" data-selection-dock hidden>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+      <div data-selected-photo-container></div>
+      <p class="selection-dock-title"><strong><span data-selection-count>0</span> öge seçildi</strong></p>
+      <button type="submit" class="btn small alt">İşaretli Kollaja Ekle / Yeni Kollaj Oluştur</button>
+      <p class="subtle">Bir kollaj kartını işaretlersen seçilen tekli fotoğraflar ona eklenir. İşaret yoksa yeni kollaj oluşur.</p>
+    </form>
+  <% } %>
+  <% if (!galleryItems.length) { %>
+    <div class="empty-state">
+      <h3>Bu bölümde henüz fotoğraf yok</h3>
+      <p>İlk fotoğraf yüklendiğinde galeri burada dolmaya başlayacak.</p>
+      <div class="inline-actions">
+        <a href="/gallery/upload?class=<%= classFilter %>" class="btn small alt">Fotoğraf Yükle</a>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="profile-grid <%= galleryItems.length < 4 ? 'is-sparse' : '' %>">
+      <% galleryItems.forEach(function(item) { %>
+        <% if (item.type === 'collage') { %>
+          <div class="profile-card media-card collage-card" data-collage-group="<%= item.groupId %>">
+            <div class="media-card-selectors">
+              <% if (currentUser.role === 'admin' || currentUser.id === item.uploader_user_id) { %>
+                <label class="checkbox-line">
+                  <input
+                    type="checkbox"
+                    data-select-collage="yes"
+                    value="<%= item.groupId %>"
+                  />
+                  Seç
+                </label>
+              <% } %>
+              <% if (currentUser.role === 'admin') { %>
+                <label class="checkbox-line">
+                  <input
+                    type="radio"
+                    name="group_id"
+                    value="<%= item.groupId %>"
+                    form="collage-selection-form"
+                  />
+                  Bu kollaja ekle
+                </label>
+              <% } %>
+            </div>
+            <div class="collage-frame">
+              <% item.photos.forEach(function(photo, idx) { %>
+                <img
+                  src="<%= photo.photo_path %>"
+                  alt="Kollaj fotoğrafı"
+                  class="gallery-preview collage-image <%= idx === 0 ? 'is-active' : '' %>"
+                  data-full-image="<%= photo.photo_path %>"
+                  data-photo-id="<%= photo.id %>"
+                  data-comments-ref="collage-<%= item.groupId %>"
+                  data-caption="<%= item.caption || '' %>"
+                  data-download-name="kollaj-<%= item.groupId %>-<%= idx + 1 %>.jpg"
+                  data-collage-group="<%= item.groupId %>"
+                  data-collage-index="<%= idx %>"
+                  loading="lazy"
+                />
+              <% }) %>
+              <button type="button" class="collage-nav prev" data-collage-prev>‹</button>
+              <button type="button" class="collage-nav next" data-collage-next>›</button>
+              <span class="collage-count"><%= item.photos.length %></span>
+            </div>
+            <p><strong>Yükleyenler:</strong> <%= item.uploader_names.join(', ') %></p>
+            <% if (item.class_branch) { %><p><strong>Sınıf:</strong> <%= item.class_branch %></p><% } %>
+            <% if (item.album_title) { %><p><strong>Albüm:</strong> <%= item.album_title %></p><% } %>
+            <% if (item.caption) { %><p><%= item.caption %></p><% } %>
+            <% if (item.date_stamp_text) { %><p class="subtle"><strong>Tarih Damgası:</strong> <%= item.date_stamp_text %></p><% } %>
+            <p class="subtle">
+              <small>
+                <%= item.created_at %>
+                <% if (featureFlags.view_counts !== false) { %> - <%= item.view_count %> görüntüleme<% } %>
+              </small>
+            </p>
+            <% const collageComments = commentsByGroupId.get(item.groupId) || []; %>
+            <div class="gallery-modal-template" id="comments-collage-<%= item.groupId %>" hidden>
+              <h3>Kollaj Yorumları</h3>
+              <% if (item.tags && item.tags.length) { %>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Kollaj Etiketleri</p>
+                  <div class="chip-list compact-top">
+                    <% item.tags.forEach(function(tag) { %>
+                      <div class="inline-actions compact-top">
+                        <a class="chip" href="/profiles/<%= tag.tagged_user_id %>"><%= tag.tagged_user_name %></a>
+                        <% if (currentUser.role === 'admin' || currentUser.id === item.uploader_user_id || currentUser.id === tag.created_by_user_id) { %>
+                          <form method="post" action="/media/collage/<%= item.groupId %>/tags/<%= tag.tagged_user_id %>/delete" class="inline-form">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                            <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                            <button type="submit" class="link-button danger">Etiketi Kaldır</button>
+                          </form>
+                        <% } %>
+                      </div>
+                    <% }) %>
+                  </div>
+                </div>
+              <% } %>
+              <% if (featureFlags.photo_reactions !== false && currentUser.role !== 'guest') { %>
+                <% const reactions = reactionsByGroupId.get(item.groupId) || []; %>
+                <% const myReaction = myReactionByGroupId.get(item.groupId) || ''; %>
+                <div class="reaction-row compact-top">
+                  <% allowedReactions.forEach(function(emoji) { %>
+                    <% const reaction = reactions.find(function(entry) { return entry.emoji === emoji; }); %>
+                    <form method="post" action="/media/collage/<%= item.groupId %>/react" class="inline-form">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                      <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                      <input type="hidden" name="emoji" value="<%= emoji %>" />
+                      <button type="submit" class="reaction-chip <%= myReaction === emoji ? 'is-active' : '' %>"><%= emoji %> <span><%= reaction ? reaction.total : 0 %></span></button>
+                    </form>
+                  <% }) %>
+                </div>
+              <% } %>
+              <% if (currentUser.role !== 'guest') { %>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Kollaja Kullanıcı Etiketi</p>
+                  <form method="post" action="/media/collage/<%= item.groupId %>/tag" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input name="tagged_user_id" inputmode="numeric" list="gallery-user-tags" placeholder="Kullanıcı ID ile etiket ekle" />
+                    <button type="submit" class="btn small alt">Ekle</button>
+                  </form>
+                </div>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Kollaj Yorumu</p>
+                  <form method="post" action="/media/collage/<%= item.groupId %>/comment" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input name="body" maxlength="400" placeholder="Kollaj hakkında yorum yaz" required />
+                    <button type="submit" class="btn small">Yorum Ekle</button>
+                  </form>
+                </div>
+              <% } %>
+              <% if (currentUser.role === 'admin' || currentUser.id === item.uploader_user_id) { %>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Kollaj Açıklaması</p>
+                  <form method="post" action="/media/collage/<%= item.groupId %>/caption" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input name="caption" maxlength="2000" placeholder="Kollaj açıklamasını güncelle" value="<%= item.caption || '' %>" />
+                    <button type="submit" class="btn small">Kaydet</button>
+                  </form>
+                </div>
+              <% } %>
+              <% if (collageComments.length) { %>
+                <div class="stack-list compact-top">
+                  <% collageComments.forEach(function(comment) { %>
+                    <div class="mini-comment">
+                      <strong><%= comment.author_name %></strong>
+                      <p><%= comment.body %></p>
+                      <% if (currentUser.role === 'admin' || currentUser.id === comment.author_id) { %>
+                        <form method="post" action="/media/collage/<%= item.groupId %>/comments/<%= comment.id %>/delete" class="inline-form compact-top">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                          <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                          <button type="submit" class="link-button danger">Yorumu Sil</button>
+                        </form>
+                      <% } %>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <p class="subtle compact-top">Henüz kollaj yorumu yok.</p>
+              <% } %>
+            </div>
+
+            <% if (currentUser.role === 'admin' || currentUser.id === item.uploader_user_id) { %>
+              <form method="post" action="/media/collage/<%= item.groupId %>/delete" class="inline-form" onsubmit="return confirm('Kollajdaki tüm fotoğraflar silinsin mi?')">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                <button type="submit" class="link-button danger">Kollajı Sil</button>
+              </form>
+            <% } %>
+            <% if (currentUser.role === 'admin') { %>
+              <form method="post" action="/media/collage/<%= item.groupId %>/unpack" class="inline-form compact-left" onsubmit="return confirm('Kollaj dağıtılsın ve tüm fotoğraflar tekli hale getirilsin mi?')">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                <button type="submit" class="link-button">Kollajı Dağıt</button>
+              </form>
+            <% } %>
+          </div>
+        <% } else { %>
+          <div class="profile-card media-card">
+            <% if (currentUser.role === 'admin' || currentUser.id === item.photo.uploader_user_id) { %>
+              <label class="checkbox-line">
+                <input
+                  type="checkbox"
+                  data-select-photo="yes"
+                  value="<%= item.photo.id %>"
+                />
+                Seç
+              </label>
+            <% } %>
+            <img
+              src="<%= item.photo.photo_path %>"
+              alt="Yüklenen fotoğraf"
+              class="gallery-preview"
+              data-full-image="<%= item.photo.photo_path %>"
+              data-photo-id="<%= item.photo.id %>"
+              data-comments-ref="photo-<%= item.photo.id %>"
+              data-caption="<%= item.photo.caption || '' %>"
+              data-download-name="galeri-foto-<%= item.photo.id %>.jpg"
+              title="Büyütmek için tıkla"
+              loading="lazy"
+            />
+            <p><strong>Yükleyen:</strong> <%= item.photo.uploader_name %></p>
+            <% if (item.photo.class_branch) { %><p><strong>Sınıf:</strong> <%= item.photo.class_branch %></p><% } %>
+            <% if (item.photo.album_title) { %><p><strong>Albüm:</strong> <%= item.photo.album_title %></p><% } %>
+            <% if (item.photo.caption) { %><p><%= item.photo.caption %></p><% } %>
+            <% if (item.photo.date_stamp_text) { %><p class="subtle"><strong>Tarih Damgası:</strong> <%= item.photo.date_stamp_text %></p><% } %>
+            <p class="subtle">
+              <small>
+                <%= item.photo.created_at %>
+                <% if (featureFlags.view_counts !== false) { %> - <%= item.photo.view_count %> görüntüleme<% } %>
+              </small>
+            </p>
+            <% const comments = commentsByPhotoId.get(item.photo.id) || []; %>
+            <div class="gallery-modal-template" id="comments-photo-<%= item.photo.id %>" hidden>
+              <h3>Fotoğraf Yorumları</h3>
+              <% if ((tagsByPhotoId.get(item.photo.id) || []).length) { %>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Fotoğraf Etiketleri</p>
+                  <div class="chip-list compact-top">
+                    <% (tagsByPhotoId.get(item.photo.id) || []).forEach(function(tag) { %>
+                      <div class="inline-actions compact-top">
+                        <a class="chip" href="/profiles/<%= tag.tagged_user_id %>"><%= tag.tagged_user_name %></a>
+                        <% if (currentUser.role === 'admin' || currentUser.id === item.photo.uploader_user_id || currentUser.id === tag.created_by_user_id) { %>
+                          <form method="post" action="/media/photos/<%= item.photo.id %>/tags/<%= tag.tagged_user_id %>/delete" class="inline-form">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                            <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                            <button type="submit" class="link-button danger">Etiketi Kaldır</button>
+                          </form>
+                        <% } %>
+                      </div>
+                    <% }) %>
+                  </div>
+                </div>
+              <% } %>
+              <% if (currentUser.role !== 'guest') { %>
+                <% const reactions = reactionsByPhotoId.get(item.photo.id) || []; %>
+                <% const myReaction = myReactionByPhotoId.get(item.photo.id) || ''; %>
+                <div class="reaction-row compact-top">
+                  <% allowedReactions.forEach(function(emoji) { %>
+                    <% const reaction = reactions.find(function(entry) { return entry.emoji === emoji; }); %>
+                    <form method="post" action="/media/photos/<%= item.photo.id %>/react" class="inline-form">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                      <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                      <input type="hidden" name="emoji" value="<%= emoji %>" />
+                      <button type="submit" class="reaction-chip <%= myReaction === emoji ? 'is-active' : '' %>"><%= emoji %> <span><%= reaction ? reaction.total : 0 %></span></button>
+                    </form>
+                  <% }) %>
+                </div>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Fotoğraf Etiketi</p>
+                  <form method="post" action="/media/photos/<%= item.photo.id %>/tag" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input name="tagged_user_id" inputmode="numeric" list="gallery-user-tags" placeholder="Kullanıcı ID ile etiketle" />
+                    <button type="submit" class="btn small alt">Ekle</button>
+                  </form>
+                </div>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Fotoğraf Yorumu</p>
+                  <form method="post" action="/media/photos/<%= item.photo.id %>/comment" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input name="body" maxlength="400" placeholder="Fotoğrafa yorum yaz" required />
+                    <button type="submit" class="btn small">Yorum Ekle</button>
+                  </form>
+                </div>
+              <% } %>
+              <% if (currentUser.role === 'admin' || currentUser.id === item.photo.uploader_user_id) { %>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Fotoğraf Açıklaması</p>
+                  <form method="post" action="/media/photos/<%= item.photo.id %>/caption" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input name="caption" maxlength="2000" placeholder="Fotoğraf açıklamasını güncelle" value="<%= item.photo.caption || '' %>" />
+                    <button type="submit" class="btn small">Kaydet</button>
+                  </form>
+                </div>
+              <% } %>
+              <% if (item.photo.album_id && (currentUser.role === 'admin' || item.photo.uploader_user_id === currentUser.id)) { %>
+                <div class="media-action-block compact-top">
+                  <p class="media-action-title">Albüm Kapağı</p>
+                  <form method="post" action="/media/albums/<%= item.photo.album_id %>/cover" class="comment-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                    <input type="hidden" name="photo_id" value="<%= item.photo.id %>" />
+                    <button type="submit" class="btn small alt">Albüm Kapağı Yap</button>
+                  </form>
+                  <% if (selectedAlbum && selectedAlbum.id === item.photo.album_id && selectedAlbum.cover_photo_id === item.photo.id) { %>
+                    <form method="post" action="/media/albums/<%= item.photo.album_id %>/cover" class="inline-form compact-top">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                      <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                      <button type="submit" class="link-button danger">Kapaktan Kaldır</button>
+                    </form>
+                  <% } %>
+                </div>
+              <% } %>
+              <% if (comments.length) { %>
+                <div class="stack-list compact-top">
+                  <% comments.forEach(function(comment) { %>
+                    <div class="mini-comment">
+                      <strong><%= comment.author_name %></strong>
+                      <p><%= comment.body %></p>
+                      <% if (currentUser.role === 'admin' || currentUser.id === comment.author_id) { %>
+                        <form method="post" action="/media/photos/<%= item.photo.id %>/comments/<%= comment.id %>/delete" class="inline-form compact-top">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                          <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                          <button type="submit" class="link-button danger">Yorumu Sil</button>
+                        </form>
+                      <% } %>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } else { %>
+                <p class="subtle compact-top">Henüz fotoğraf yorumu yok.</p>
+              <% } %>
+            </div>
+
+            <% if (currentUser.role === 'admin' || currentUser.id === item.photo.uploader_user_id) { %>
+              <form method="post" action="/media/photos/<%= item.photo.id %>/delete" class="inline-form" onsubmit="return confirm('Fotoğraf silinsin mi?')">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+                <button type="submit" class="link-button danger">Fotoğrafı Sil</button>
+              </form>
+            <% } %>
+          </div>
+        <% } %>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+
+<% if (currentUser.role === 'admin' && selectedAlbum) { %>
+  <section class="card">
+    <h2>Albüm Sıralaması</h2>
+    <p class="subtle">Fotoğrafları sürükleyerek sıralayın, sonra kaydedin.</p>
+    <form method="post" action="/media/albums/<%= selectedAlbum.id %>/order" id="album-order-form" class="stack-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="class_filter" value="<%= classFilter %>" />
+      <input type="hidden" name="photo_order" id="album-photo-order" value="" />
+      <ul class="sortable-list" data-sortable-list>
+        <% galleryItems.filter((item) => item.type === 'single' && item.photo.album_id === selectedAlbum.id).forEach(function(item) { %>
+          <li class="sortable-item" draggable="true" data-photo-id="<%= item.photo.id %>">
+            <span class="drag-handle">::</span>
+            <img src="<%= item.photo.photo_path %>" alt="Albüm fotoğrafı" loading="lazy" />
+            <span>#<%= item.photo.id %> - <%= item.photo.caption || item.photo.created_at %></span>
+          </li>
+        <% }) %>
+      </ul>
+      <button type="submit" class="btn">Sıralamayı Kaydet</button>
+    </form>
+  </section>
+<% } %>
+
+<div id="gallery-modal" class="gallery-modal" hidden>
+  <div class="gallery-modal-overlay" data-close-modal="yes"></div>
+  <div class="gallery-modal-content" role="dialog" aria-modal="true" aria-label="Fotoğraf önizleme">
+    <button type="button" class="gallery-modal-close" data-close-modal="yes" aria-label="Kapat">×</button>
+    <button type="button" class="gallery-modal-nav prev" id="gallery-modal-prev" hidden aria-label="Önceki fotoğraf">‹</button>
+    <button type="button" class="gallery-modal-nav next" id="gallery-modal-next" hidden aria-label="Sonraki fotoğraf">›</button>
+    <img id="gallery-modal-image" src="" alt="Büyük fotoğraf önizleme" />
+    <div id="gallery-modal-caption" class="gallery-modal-caption" hidden></div>
+    <div class="gallery-modal-actions">
+      <a id="gallery-download-link" class="btn" href="#" download>İndir</a>
+    </div>
+    <div id="gallery-modal-comments" class="gallery-modal-comments"></div>
+  </div>
+</div>
+<%- include('partials/footer') %>

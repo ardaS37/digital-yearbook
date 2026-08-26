@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr" id="html-lang">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenan - Antik Ortadoğu İmparatorluğu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="body-theme">
+    <!-- Giriş/Kayıt Ekranı -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <h1>KENAN</h1>
+            <p class="subtitle">Antik Ortadoğu İmparatorluğu</p>
+
+            <div id="login-form" class="auth-form active">
+                <h2>Giriş Yap</h2>
+                <input type="text" id="login-username" placeholder="Kullanıcı Adı" autocomplete="off">
+                <input type="password" id="login-password" placeholder="Şifre" autocomplete="off">
+                <button onclick="login()">Giriş Yap</button>
+                <p class="switch-form">Hesabın yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a></p>
+            </div>
+
+            <div id="register-form" class="auth-form">
+                <h2>Kayıt Ol</h2>
+                <p class="info-text">Oyuna katılmak için bir referans kodu gereklidir.</p>
+                <input type="text" id="register-username" placeholder="Kullanıcı Adı" autocomplete="off">
+                <input type="password" id="register-password" placeholder="Şifre" autocomplete="off">
+                <input type="text" id="referral-code" placeholder="Referans Kodu" autocomplete="off">
+                <select id="register-gender" style="width: 100%; padding: 10px; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #444; color: #eee; border-radius: 4px;">
+                    <option value="" disabled selected>Cinsiyet Seçin</option>
+                    <option value="male">Erkek</option>
+                    <option value="female">Kadın</option>
+                </select>
+                <button onclick="register()">Kayıt Ol</button>
+                <p class="switch-form">Zaten hesabın var mı? <a href="#" onclick="showLogin()">Giriş Yap</a></p>
+            </div>
+
+            <div id="auth-message" class="message"></div>
+        </div>
+    </div>
+
+    <!-- Oyun Ekranı -->
+    <div id="game-screen" class="screen">
+        <!-- Üst Kaynak Çubuğu -->
+        <div class="top-bar">
+            <button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-label="Menüyü aç" aria-expanded="false">☰</button>
+            <div class="resources">
+                <div class="resource-item">
+                    <span class="resource-icon">🪙</span>
+                    <span class="resource-name" data-key="Altın">Altın:</span>
+                    <span id="resource-gold" class="resource-value">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">🌾</span>
+                    <span class="resource-name" data-key="Gıda">Gıda:</span>
+                    <span id="resource-food" class="resource-value">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">🪨</span>
+                    <span class="resource-name" data-key="Malzeme">Malzeme:</span>
+                    <span id="resource-material" class="resource-value">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">⚔️</span>
+                    <span class="resource-name" data-key="Silah">Silah:</span>
+                    <span id="resource-weapons" class="resource-value">0</span>
+                </div>
+                <div class="resource-item">
+                    <span class="resource-icon">👥</span>
+                    <span class="resource-name" data-key="Köle">Köle:</span>
+                    <span id="resource-slaves" class="resource-value">0</span>
+                </div>
+            </div>
+
+            <div class="user-info">
+                <span id="user-kingdom" style="color: #D4AF37; margin-right: 15px;"></span>
+                <span id="user-rank" style="color: #FFD700; margin-right: 15px;"></span>
+                <span id="user-name">Kullanıcı</span>
+                <button class="logout-btn" onclick="logout()">Çıkış</button>
+            </div>
+        </div>
+
+        <!-- Ana İçerik -->
+        <div class="main-content">
+            <!-- Sol Menü -->
+            <div class="left-menu">
+                <div class="menu-section">
+                    <h3>İmparatorluk</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item active" data-page="overview">
+                            <span class="menu-icon">🏛️</span>
+                            <span>Genel Bakış</span>
+                        </li>
+                        <li class="menu-item" data-page="map">
+                            <span class="menu-icon">🗺️</span>
+                            <span>Harita</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Yönetim</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item" data-page="slaves">
+                            <span class="menu-icon">👥</span>
+                            <span>Köleler</span>
+                        </li>
+                        <li class="menu-item" data-page="masters">
+                            <span class="menu-icon">👑</span>
+                            <span>Hiyerarşi</span>
+                        </li>
+                        <li class="menu-item" data-page="referral">
+                            <span class="menu-icon">📨</span>
+                            <span>Davet</span>
+                        </li>
+                        <li class="menu-item" data-page="ranks">
+                            <span class="menu-icon">⚔️</span>
+                            <span>Rütbe Yönetimi</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Aile</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item" data-page="marriage">
+                            <span class="menu-icon">💍</span>
+                            <span>Evlilik</span>
+                        </li>
+                        <li class="menu-item" data-page="proposals">
+                            <span class="menu-icon">💌</span>
+                            <span>Teklifler</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Pazar</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item" data-page="slave-market">
+                            <span class="menu-icon">🏛️</span>
+                            <span>Köle Pazarı</span>
+                        </li>
+                        <li class="menu-item" data-page="material-market">
+                            <span class="menu-icon">🧱</span>
+                            <span>Malzeme Pazarı</span>
+                        </li>
+                        <li class="menu-item" data-page="buy-freedom">
+                            <span class="menu-icon">🔓</span>
+                            <span>Özgür Kal</span>
+                        </li>
+                        <li class="menu-item" data-page="investments">
+                            <span class="menu-icon">💰</span>
+                            <span>Yatırımlar</span>
+                        </li>
+                        <li class="menu-item" data-page="food-market">
+                            <span class="menu-icon">🥖</span>
+                            <span>Gıda Pazarı</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Üretim</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item" data-page="production">
+                            <span class="menu-icon">🔨</span>
+                            <span>Üretim</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Savaş</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item" data-page="wars">
+                            <span class="menu-icon">⚔️</span>
+                            <span>Savaş</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Entrika</h3>
+                    <ul class="menu-list">
+                        <li class="menu-item" data-page="intrigue">
+                            <span class="menu-icon">⚔️</span>
+                            <span>Entrika</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Diğer</h3>
+                    <ul class="menu-list">
+                        <!-- Gemini’nin ekledikleri -->
+                        <li class="menu-item" data-page="inbox">
+                            <span class="menu-icon">📥</span>
+                            <span>Gelen Kutusu</span>
+                        </li>
+                        <li class="menu-item" data-page="global-rankings">
+                            <span class="menu-icon">🏆</span>
+                            <span>Küresel Sıralamalar</span>
+                        </li>
+                        <li class="menu-item" data-page="admin">
+                            <span class="menu-icon">🛠️</span>
+                            <span>Admin Paneli</span>
+                        </li>
+
+                        <li class="menu-item" data-page="stats">
+                            <span class="menu-icon">📊</span>
+                            <span>İstatistikler</span>
+                        </li>
+                        <li class="menu-item" data-page="settings">
+                            <span class="menu-icon">⚙️</span>
+                            <span>Ayarlar</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Orta İçerik -->
+            <div class="content-area">
+                <div id="page-overview" class="page active">
+                    <h2>🏛️ İmparatorluğun Genel Bakışı</h2>
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h3>Kaynaklar</h3>
+                            <div class="resource-display">
+                                <div data-resource="gold">🪙 <span class="resource-label" data-key="Altın">Altın</span>: <span id="overview-gold">0</span></div>
+                                <div data-resource="food">🌾 <span class="resource-label" data-key="Gıda">Gıda</span>: <span id="overview-food">0</span></div>
+                                <div data-resource="material">🪨 <span class="resource-label" data-key="Malzeme">Malzeme</span>: <span id="overview-material">0</span></div>
+                                <div data-resource="slaves">👥 <span class="resource-label" data-key="Köle">Köle</span>: <span id="overview-slaves">0</span></div>
+                                <div data-resource="weapons">⚔️ <span class="resource-label" data-key="Silah">Silah</span>: <span id="overview-weapons">0</span></div>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <h3>Günlük Ödül</h3>
+                            <button class="daily-btn" onclick="claimDaily()">Günlük Ödülü Al</button>
+                            <div id="daily-status" class="daily-status"></div>
+                        </div>
+                        <div class="overview-card">
+                            <h3>Başlangıç Görevleri</h3>
+                            <div style="line-height: 1.8;">
+                                <div>1. Günlük ödülünü al</div>
+                                <div>2. Haritadan krallıkları incele</div>
+                                <div>3. Gıda pazarından stok yap</div>
+                                <div>4. Üretim başlat</div>
+                                <div>5. Davet kodunu paylaş</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-slaves" class="page">
+                    <h2>👥 Kölelerim</h2>
+                    <div id="slaves-content" class="slaves-content"></div>
+                </div>
+
+                <div id="page-masters" class="page">
+                    <h2>👑 Hiyerarşi</h2>
+                    <div id="masters-content" class="masters-content"></div>
+                </div>
+
+                <div id="page-referral" class="page">
+                    <h2>📨 Davet Sistemi</h2>
+                    <div id="referral-content" class="referral-content"></div>
+                </div>
+
+                <div id="page-ranks" class="page">
+                    <h2>⚔️ Rütbe Yönetimi</h2>
+                    <div id="ranks-content" class="ranks-content"></div>
+                </div>
+
+                <div id="page-stats" class="page">
+                    <h2>📊 İstatistikler</h2>
+                    <div id="stats-content" class="stats-content"></div>
+                </div>
+
+                <div id="page-global-rankings" class="page">
+                    <h2>🏆 Küresel Sıralamalar</h2>
+                    <div id="global-rankings-content"></div>
+                </div>
+
+                <div id="page-admin" class="page">
+                    <h2>🛠️ Admin Paneli</h2>
+                    <div id="admin-content"></div>
+                </div>
+
+                <div id="page-slave-market" class="page">
+                    <h2>🏛️ Köle Pazarı</h2>
+                    <div id="slave-market-content" class="slave-market-content"></div>
+                </div>
+
+                <div id="page-material-market" class="page">
+                    <h2>🧱 Malzeme Pazarı</h2>
+                    <div id="material-market-content"></div>
+                </div>
+
+                <div id="page-food-market" class="page">
+                    <h2>🥖 Gıda Pazarı</h2>
+                    <div id="food-market-content"></div>
+                </div>
+
+                <div id="page-investments" class="page">
+                    <h2>💰 Yatırımlar</h2>
+                    <div id="investments-content" class="investments-content"></div>
+                </div>
+
+                <div id="page-production" class="page">
+                    <h2>🔨 Üretim</h2>
+                    <div id="production-content"></div>
+                </div>
+
+                <div id="page-buy-freedom" class="page">
+                    <h2>🔓 Özgürlük Satın Al</h2>
+                    <div id="buy-freedom-content"></div>
+                </div>
+
+                <div id="page-wars" class="page">
+                    <h2>⚔️ Savaş</h2>
+                    <div id="wars-content"></div>
+                </div>
+
+                <div id="page-intrigue" class="page">
+                    <h2>⚔️ Entrika</h2>
+                    <div id="intrigue-content"></div>
+                </div>
+
+                <div id="page-marriage" class="page">
+                    <h2>💍 Evlilik Durumu</h2>
+                    <div id="marriage-content"></div>
+                </div>
+
+                <div id="page-proposals" class="page">
+                    <h2>💌 Gelen/Giden Teklifler</h2>
+                    <div id="proposals-content"></div>
+                </div>
+
+                <div id="page-map" class="page">
+                    <h2>🗺️ Dünya Haritası</h2>
+                    <div id="map-content" class="map-content"></div>
+                </div>
+
+                <div id="page-settings" class="page">
+                    <h2>⚙️ Ayarlar</h2>
+                    <div id="settings-content" class="settings-content"></div>
+                </div>
+
+                <div id="page-inbox" class="page">
+                    <h2>📥 Gelen Kutusu</h2>
+                    <div id="inbox-content"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

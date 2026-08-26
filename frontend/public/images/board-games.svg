@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="Klasik masa oyunları">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#143f35"/>
+      <stop offset="1" stop-color="#d5a242"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" x2="1">
+      <stop offset="0" stop-color="#fff3d4"/>
+      <stop offset="1" stop-color="#f3c86e"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#bg)"/>
+  <circle cx="770" cy="105" r="70" fill="#ffe093" opacity=".88"/>
+  <path d="M0 410 C155 325 263 420 402 356 C544 291 650 324 782 254 C863 211 923 220 960 199 L960 540 L0 540 Z" fill="#9b5a26" opacity=".72"/>
+  <rect x="92" y="74" width="340" height="340" rx="26" fill="#224f64" stroke="#fff3d4" stroke-width="10"/>
+  <g fill="none" stroke="#fff3d4" stroke-width="5" opacity=".9">
+    <path d="M132 74v340M172 74v340M212 74v340M252 74v340M292 74v340M332 74v340M372 74v340"/>
+    <path d="M92 114h340M92 154h340M92 194h340M92 234h340M92 274h340M92 314h340M92 354h340"/>
+  </g>
+  <g>
+    <circle cx="132" cy="114" r="20" fill="#151515"/>
+    <circle cx="172" cy="154" r="20" fill="#fff3d4"/>
+    <circle cx="212" cy="194" r="20" fill="#151515"/>
+    <circle cx="292" cy="274" r="20" fill="#fff3d4"/>
+    <circle cx="332" cy="314" r="20" fill="#151515"/>
+    <circle cx="372" cy="354" r="20" fill="#fff3d4"/>
+  </g>
+  <rect x="520" y="114" width="300" height="252" rx="30" fill="rgba(21,21,21,.58)"/>
+  <rect x="558" y="152" width="226" height="62" rx="18" fill="url(#panel)"/>
+  <rect x="558" y="236" width="92" height="92" rx="18" fill="#fff7e5"/>
+  <rect x="692" y="236" width="92" height="92" rx="18" fill="#fff7e5"/>
+  <text x="604" y="197" text-anchor="middle" font-family="Georgia,serif" font-size="42" font-weight="700" fill="#143f35">9</text>
+  <text x="738" y="296" text-anchor="middle" font-family="Georgia,serif" font-size="42" font-weight="700" fill="#143f35">X</text>
+  <text x="670" y="403" text-anchor="middle" font-family="Georgia,serif" font-size="38" font-weight="700" fill="#fff7e5">Klasik Oyunlar</text>
+</svg>

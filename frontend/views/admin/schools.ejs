@@ -1,0 +1,145 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Okul Ayarları</h1>
+  <p class="subtle">
+    Admin tüm okulları yönetir. Müdür, müdür yardımcısı ve baş müdür yardımcısı kendi okul ayarlarını düzenleyebilir.
+  </p>
+  <p class="compact-top">
+    <% if (currentUser.role === 'admin') { %>
+      <a href="/admin" class="btn small alt">Yönetim Paneline Dön</a>
+    <% } %>
+    <a href="/admin/signup-requests" class="btn small alt">Hesap Başvuruları<% if (pendingSignupCount) { %> (<%= pendingSignupCount %>)<% } %></a>
+  </p>
+</section>
+
+<% if (canManageAllSchools) { %>
+  <section class="card">
+    <h2>Aktif Okul Seçimi</h2>
+    <form method="post" action="/admin/schools/select" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="current_school_id">Admin ekranında seçili okul</label>
+      <select id="current_school_id" name="school_id">
+        <% activeSchools.forEach(function(school) { %>
+          <option value="<%= school.id %>" <%= currentSchoolId === school.id ? 'selected' : '' %>><%= school.name %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="btn small">Okulu Seç</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Yeni Okul Ekle</h2>
+    <form method="post" action="/admin/schools" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="school_name">Okul adı</label>
+      <input id="school_name" name="name" maxlength="120" placeholder="Okul adı" required />
+      <label for="school_theme_color">Global tema rengi</label>
+      <input id="school_theme_color" type="color" name="theme_color" value="#0d6e6e" />
+      <button type="submit" class="btn small alt">Okulu Kaydet</button>
+    </form>
+  </section>
+<% } %>
+
+<section class="card">
+  <h2>Okullar</h2>
+  <% if (!schools.length) { %>
+    <p>Kayıtlı okul yok.</p>
+  <% } else { %>
+    <table class="compact-top">
+      <thead>
+        <tr>
+          <th>Okul</th>
+          <th>Durum</th>
+          <th>Kullanıcılar</th>
+          <th>Tema ve Arka Plan</th>
+          <% if (canManageAllSchools) { %><th>Toplu Atama</th><th>Sil / Geri Yükle</th><% } %>
+        </tr>
+      </thead>
+      <tbody>
+        <% schools.forEach(function(school) { const counts = countBySchool.get(school.id) || {}; const isActiveSchool = Number(school.is_active) === 1; %>
+          <tr>
+            <td><strong><%= school.name %></strong><br /><span class="subtle"><%= school.slug %></span></td>
+            <td><%= isActiveSchool ? 'Aktif' : 'Silindi' %></td>
+            <td>
+              Öğrenci: <%= counts.students || 0 %><br />
+              Öğretmen: <%= counts.teachers || 0 %><br />
+              Diğer: <%= counts.others || 0 %>
+            </td>
+            <td>
+              <% if (isActiveSchool) { %>
+                <form method="post" action="/admin/schools/<%= school.id %>/theme" class="stack-form compact-top" enctype="multipart/form-data">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <label for="theme_color_<%= school.id %>">Tema rengi</label>
+                  <input id="theme_color_<%= school.id %>" type="color" name="theme_color" value="<%= school.theme_color || '#0d6e6e' %>" />
+                  <label class="check-inline">
+                    <input type="checkbox" name="background_gradient_enabled" value="yes" <%= Number(school.background_gradient_enabled || 0) === 1 ? 'checked' : '' %> />
+                    Tema rengine özel gradyan/desen açık
+                  </label>
+                  <label class="check-inline">
+                    <input type="checkbox" name="background_wallpaper_enabled" value="yes" <%= Number(school.background_wallpaper_enabled || 0) === 1 ? 'checked' : '' %> />
+                    Okul duvar kağıdı açık
+                  </label>
+                  <label for="wallpaper_image_<%= school.id %>">Duvar kağıdı yükle</label>
+                  <input id="wallpaper_image_<%= school.id %>" type="file" name="wallpaper_image" accept="image/*" />
+                  <% if (school.background_wallpaper_path) { %>
+                    <span class="subtle">Yüklü görsel: <%= school.background_wallpaper_path %></span>
+                    <label class="check-inline">
+                      <input type="checkbox" name="remove_wallpaper" value="yes" />
+                      Yüklü duvar kağıdını sil
+                    </label>
+                  <% } %>
+                  <button type="submit" class="btn small alt">Kaydet</button>
+                </form>
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+            <% if (canManageAllSchools) { %>
+              <td>
+                <% if (isActiveSchool) { %>
+                  <form method="post" action="/admin/schools/<%= school.id %>/assign-role" class="inline-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <select name="role">
+                      <option value="student">Öğrenciler</option>
+                      <option value="teacher">Öğretmenler</option>
+                      <option value="other">Diğer</option>
+                    </select>
+                    <button type="submit" class="link-button">Seçili grubu bu okula ata</button>
+                  </form>
+                <% } else { %>
+                  -
+                <% } %>
+              </td>
+              <td>
+                <% if (isActiveSchool) { %>
+                  <form method="post" action="/admin/schools/<%= school.id %>/delete" class="stack-form compact-top">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <label for="delete_confirmation_<%= school.id %>">Onay kodu: okul adını yaz</label>
+                    <input id="delete_confirmation_<%= school.id %>" name="delete_confirmation" maxlength="120" placeholder="<%= school.name %>" required />
+                    <label for="admin_access_code_<%= school.id %>">Admin erişim kodu</label>
+                    <input id="admin_access_code_<%= school.id %>" type="password" name="admin_access_code" maxlength="100" required />
+                    <button type="submit" class="link-button danger">Okulu Sil</button>
+                  </form>
+                <% } else { %>
+                  <form method="post" action="/admin/schools/<%= school.id %>/recover" class="inline-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <button type="submit" class="link-button">Geri Yükle</button>
+                  </form>
+                  <form method="post" action="/admin/schools/<%= school.id %>/permanent-delete" class="stack-form compact-top">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                    <label for="permanent_delete_confirmation_<%= school.id %>">Kalıcı silme onayı: okul adını yaz</label>
+                    <input id="permanent_delete_confirmation_<%= school.id %>" name="delete_confirmation" maxlength="120" placeholder="<%= school.name %>" required />
+                    <label for="permanent_admin_access_code_<%= school.id %>">Admin erişim kodu</label>
+                    <input id="permanent_admin_access_code_<%= school.id %>" type="password" name="admin_access_code" maxlength="100" required />
+                    <button type="submit" class="link-button danger">Kalıcı Sil</button>
+                  </form>
+                <% } %>
+              </td>
+            <% } %>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,10 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Sistem Bakım Modunda</h1>
+  <p class="compact-top"><%= maintenanceState && maintenanceState.message ? maintenanceState.message : 'Bakım işlemi tamamlanana kadar site geçici olarak yalnızca yöneticilere açıktır.' %></p>
+  <% if (maintenanceState && maintenanceState.startedAt) { %>
+    <p class="subtle">Başlangıç: <%= maintenanceState.startedAt %></p>
+  <% } %>
+  <p class="compact-top subtle">Biraz sonra tekrar deneyin.</p>
+</section>
+<%- include('partials/footer', { currentUser, csrfToken, cookieConsent }) %>

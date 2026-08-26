@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> - Yıllık</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%F0%9F%93%98%3C/text%3E%3C/svg%3E"
+    />
+    <script nonce="<%= cspNonce %>">
+      (function () {
+        function hslToHex(h, s, l) {
+          l /= 100; s /= 100;
+          var a = s * Math.min(l, 1 - l);
+          var f = function (n) {
+            var k = (n + h / 30) % 12;
+            var c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * c).toString(16).padStart(2, '0');
+          };
+          return '#' + f(0) + f(8) + f(4);
+        }
+        function randomAccentColor() {
+          return hslToHex(Math.floor(Math.random() * 360), 62, 44);
+        }
+        try {
+          var mode = '<%= (typeof currentUser !== "undefined" && currentUser && typeof userAccentMode !== "undefined") ? userAccentMode : "default" %>';
+          var userColor = localStorage.getItem('userAccentColor');
+          var defaultMode = localStorage.getItem('defaultAccentMode') === 'default';
+          var serverColor = '<%= loginAccentColor || "" %>';
+          var effectiveColor = null;
+          if (userColor && /^#[0-9a-f]{6}$/i.test(userColor)) {
+            /* Kullanıcı sabit renk seçmiş */
+            effectiveColor = userColor;
+          } else if (!defaultMode && mode === 'random' && serverColor) {
+            /* Sunucudan gelen login başına rastgele renk */
+            effectiveColor = serverColor;
+          } else if (!defaultMode && mode === 'random') {
+            /* Oturum yoksa (login sayfası vb) client-side rastgele */
+            var sc = sessionStorage.getItem('sessionAccentColor');
+            if (!sc) { sc = randomAccentColor(); sessionStorage.setItem('sessionAccentColor', sc); }
+            effectiveColor = sc;
+          }
+          if (effectiveColor) {
+            document.documentElement.style.setProperty('--accent', effectiveColor);
+            document.documentElement.style.setProperty('--accent-readable', effectiveColor);
+            /* data-user-accent: body scriptinin okuyabilmesi için */
+            document.documentElement.setAttribute('data-user-accent', effectiveColor);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script nonce="<%= cspNonce %>">
+      (function () {
+        try {
+          var pref = localStorage.getItem('themePreference') || 'system';
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var resolved = pref === 'system' ? (prefersDark ? 'dark' : 'light') : pref;
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.documentElement.setAttribute('data-theme-preference', pref);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.documentElement.setAttribute('data-theme-preference', 'system');
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/public/css/styles.css?v=liquid-glass-v3-20260613-59" />
+    <% const safePageThemeColor = typeof pageThemeColor === 'undefined' ? '' : pageThemeColor; %>
+    <% const effectiveThemeColor = safePageThemeColor || '#0d6e6e'; %>
+    <% const safeSchoolWallpaperPath = currentSchool && Number(currentSchool.background_wallpaper_enabled || 0) === 1 && currentSchool.background_wallpaper_path ? currentSchool.background_wallpaper_path : ''; %>
+    <% const safeSchoolGradientEnabled = currentSchool && Number(currentSchool.background_gradient_enabled || 0) === 1; %>
+    <% if (safePageThemeColor || safeSchoolWallpaperPath || safeSchoolGradientEnabled) { %>
+      <style nonce="<%= cspNonce %>">
+        html[data-theme='light'] body {
+          --accent: <%= effectiveThemeColor %>;
+          --accent-soft: color-mix(in srgb, <%= effectiveThemeColor %> 16%, #ffffff);
+          --bg: color-mix(in srgb, <%= effectiveThemeColor %> 7%, #f4f1ea);
+          --bg-top: color-mix(in srgb, <%= effectiveThemeColor %> 5%, #ffffff);
+          --surface: color-mix(in srgb, <%= effectiveThemeColor %> 3%, #ffffff);
+          --line: color-mix(in srgb, <%= effectiveThemeColor %> 22%, #d5dce5);
+          --link: color-mix(in srgb, <%= effectiveThemeColor %> 74%, #12375f);
+          --accent-on: #ffffff;
+          --accent-readable: color-mix(in srgb, <%= effectiveThemeColor %> 62%, #12375f);
+          --topbar-bg: color-mix(in srgb, <%= effectiveThemeColor %> 4%, #ffffff);
+          --topbar-ink: #1d2433;
+          --hero-start: color-mix(in srgb, <%= effectiveThemeColor %> 4%, #ffffff);
+          --hero-end: color-mix(in srgb, <%= effectiveThemeColor %> 14%, #eef8f8);
+          --hero-overlay-start: color-mix(in srgb, <%= effectiveThemeColor %> 7%, rgba(255, 255, 255, 0.82));
+          --hero-overlay-end: color-mix(in srgb, <%= effectiveThemeColor %> 16%, rgba(238, 248, 248, 0.9));
+          --school-gradient-layer: <%= safeSchoolGradientEnabled
+            ? `radial-gradient(circle at 14% 18%, color-mix(in srgb, ${effectiveThemeColor} 14%, rgba(255, 255, 255, 0.66)), transparent 28%),
+               radial-gradient(circle at 86% 12%, color-mix(in srgb, ${effectiveThemeColor} 10%, rgba(255, 255, 255, 0.48)), transparent 20%),
+               linear-gradient(135deg, color-mix(in srgb, ${effectiveThemeColor} 10%, transparent), transparent 48%, color-mix(in srgb, ${effectiveThemeColor} 8%, rgba(255,255,255,0.2)))`
+            : 'none' %>;
+          --school-wallpaper-layer: <%= safeSchoolWallpaperPath
+            ? `linear-gradient(180deg, rgba(255,255,255,0.48), rgba(244,241,234,0.76)), url("${safeSchoolWallpaperPath}")`
+            : 'none' %>;
+        }
+
+        html[data-theme='dark'] body {
+          --accent: color-mix(in srgb, <%= effectiveThemeColor %> 76%, #b8f4ff);
+          --accent-soft: color-mix(in srgb, <%= effectiveThemeColor %> 24%, #172132);
+          --bg: color-mix(in srgb, <%= effectiveThemeColor %> 10%, #0f1520);
+          --bg-top: color-mix(in srgb, <%= effectiveThemeColor %> 14%, #141d2a);
+          --surface: color-mix(in srgb, <%= effectiveThemeColor %> 13%, #1a2433);
+          --line: color-mix(in srgb, <%= effectiveThemeColor %> 25%, #2d3a4d);
+          --subtle: color-mix(in srgb, <%= effectiveThemeColor %> 18%, #9fb0c8);
+          --link: color-mix(in srgb, <%= effectiveThemeColor %> 38%, #8fb8ff);
+          --accent-on: #ffffff;
+          --accent-readable: color-mix(in srgb, <%= effectiveThemeColor %> 32%, #d8f6ff);
+          --topbar-bg: color-mix(in srgb, <%= effectiveThemeColor %> 12%, #121a26);
+          --topbar-ink: #e8eef8;
+          --hero-start: color-mix(in srgb, <%= effectiveThemeColor %> 14%, #182332);
+          --hero-end: color-mix(in srgb, <%= effectiveThemeColor %> 22%, #162936);
+          --hero-overlay-start: color-mix(in srgb, <%= effectiveThemeColor %> 10%, rgba(10, 18, 28, 0.76));
+          --hero-overlay-end: color-mix(in srgb, <%= effectiveThemeColor %> 18%, rgba(15, 25, 38, 0.88));
+          --school-gradient-layer: <%= safeSchoolGradientEnabled
+            ? `radial-gradient(circle at 18% 16%, color-mix(in srgb, ${effectiveThemeColor} 14%, rgba(139, 208, 255, 0.18)), transparent 26%),
+               radial-gradient(circle at 82% 10%, color-mix(in srgb, ${effectiveThemeColor} 10%, rgba(255, 255, 255, 0.08)), transparent 18%),
+               linear-gradient(135deg, color-mix(in srgb, ${effectiveThemeColor} 14%, rgba(8, 14, 22, 0.22)), transparent 52%, color-mix(in srgb, ${effectiveThemeColor} 12%, rgba(14, 28, 40, 0.32)))`
+            : 'none' %>;
+          --school-wallpaper-layer: <%= safeSchoolWallpaperPath
+            ? `linear-gradient(180deg, rgba(7,12,18,0.52), rgba(14,22,34,0.8)), url("${safeSchoolWallpaperPath}")`
+            : 'none' %>;
+        }
+      </style>
+    <% } %>
+  </head>
+  <body data-csrf-token="<%= csrfToken %>" data-liquid-glass="<%= liquidGlassEnabled ? 'on' : 'off' %>" data-liquid-preset="<%= typeof liquidGlassPreset === 'undefined' ? 'soft' : liquidGlassPreset %>" data-liquid-style="<%= typeof liquidGlassStyle === 'undefined' ? 'clear' : liquidGlassStyle %>">
+    <script nonce="<%= cspNonce %>">
+      (function () {
+        try {
+          var v = localStorage.getItem('liquidGlassOverride');
+          if (v === 'on' || v === 'off') {
+            document.body.setAttribute('data-liquid-glass', v);
+          }
+        } catch (e) {}
+        /* Sayfa kendine ait renk barındırmıyorsa kullanıcı rengini body'ye uygula */
+        try {
+          var _pageOwn = '<%= (typeof pageHasOwnColor !== "undefined" && pageHasOwnColor) ? "1" : "" %>';
+          if (!_pageOwn) {
+            var _c = document.documentElement.getAttribute('data-user-accent');
+            if (_c) {
+              document.body.style.setProperty('--accent', _c);
+              document.body.style.setProperty('--accent-readable', _c);
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
+    <%
+      const path = currentPath || '/';
+      const isHome = path === '/';
+      const isSearch = path === '/search';
+      const isClasses = path === '/classes' || path.startsWith('/classes/');
+      const isGames = path === '/games' || path.startsWith('/games/');
+      const isProfile = currentUser && path === `/profiles/${currentUser.id}`;
+      const isMoreMenu = isGames || path === '/students/random' || path === '/anonymous-board' || path === '/teachers' || path === '/closing' || path === '/archive' || path === '/hesabim/girisler';
+      const isManagementMenu = path === '/admin' || path.startsWith('/admin/');
+    %>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a href="/" class="brand">Yıllık</a>
+        <div class="topbar-actions">
+          <% if (currentUser) { %>
+            <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Menüyü aç">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            <nav id="primary-nav" class="nav-links">
+              <a class="<%= isHome ? 'is-active' : '' %>" href="/">Ana Sayfa</a>
+              <a class="<%= isSearch ? 'is-active' : '' %>" href="/search">Arama</a>
+              <a class="<%= isClasses ? 'is-active' : '' %>" href="/classes">Sınıflar</a>
+              <% if (!featureFlags || featureFlags.gallery !== false) { %><a class="<%= path === '/gallery' ? 'is-active' : '' %>" href="/gallery">Galeri</a><% } %>
+              <% if (currentUser.role !== 'admin') { %>
+                <a class="<%= isProfile ? 'is-active' : '' %> nav-badge-wrap" href="/profiles/<%= currentUser.id %>">
+                  Profilim<% if (inboxUnreadCount > 0) { %><span class="nav-badge"><%= inboxUnreadCount %></span><% } %>
+                </a>
+              <% } %>
+
+              <details class="nav-menu <%= isMoreMenu ? 'is-active' : '' %>">
+                <summary>Daha Fazla</summary>
+                <div class="nav-menu-panel">
+                  <a class="<%= isGames ? 'is-active' : '' %>" href="/games">Oyunlar</a>
+                  <a class="<%= path === '/students/random' ? 'is-active' : '' %>" href="/students/random">Rastgele Öğrenci</a>
+                  <a class="<%= path === '/anonymous-board' ? 'is-active' : '' %>" href="/anonymous-board">Mantar Pano</a>
+                  <a class="<%= path === '/teachers' ? 'is-active' : '' %>" href="/teachers">Öğretmenler</a>
+                  <% if (!featureFlags || featureFlags.closing_page !== false) { %><a class="<%= path === '/closing' ? 'is-active' : '' %>" href="/closing">Kapanış</a><% } %>
+                  <% if ((archivePublic || (currentUser && currentUser.role === 'admin'))) { %><a class="<%= path === '/archive' ? 'is-active' : '' %>" href="/archive">Arşiv</a><% } %>
+                  <a class="<%= path === '/hesabim/girisler' ? 'is-active' : '' %>" href="/hesabim/girisler">Ayarlar</a>
+                </div>
+              </details>
+
+              <% if (currentUser.role === 'admin' || canManageSchools || canReviewContent) { %>
+                <% const totalMgmtBadge = (contentApprovalPendingCount || 0) + (signupRequestsPendingCount || 0); %>
+                <details class="nav-menu nav-menu-management <%= isManagementMenu ? 'is-active' : '' %>">
+                  <summary class="nav-badge-wrap">Yönetim<% if (totalMgmtBadge > 0) { %><span class="nav-badge nav-badge-danger"><%= totalMgmtBadge %></span><% } %></summary>
+                  <div class="nav-menu-panel">
+                    <% if (currentUser.role === 'admin') { %>
+                      <a class="<%= path === '/admin' ? 'is-active' : '' %>" href="/admin">Yönetim Paneli</a>
+                    <% } %>
+                    <% if (canManageSchools) { %>
+                      <a class="<%= path === '/admin/schools' ? 'is-active' : '' %>" href="/admin/schools">Okul Ayarları</a>
+                      <a class="<%= path === '/admin/yearbook-book' ? 'is-active' : '' %>" href="/admin/yearbook-book">Yıllık Export</a>
+                      <a class="<%= path === '/admin/signup-requests' ? 'is-active' : '' %>" href="/admin/signup-requests">Hesap Başvuruları<% if (signupRequestsPendingCount) { %> (<%= signupRequestsPendingCount %>)<% } %></a>
+                    <% } %>
+                    <% if (canReviewContent) { %>
+                      <a class="<%= path === '/admin/content-approvals' ? 'is-active' : '' %>" href="/admin/content-approvals">Onay Paneli<% if (contentApprovalPendingCount) { %> (<%= contentApprovalPendingCount %>)<% } %></a>
+                    <% } %>
+                  </div>
+                </details>
+              <% } %>
+
+              <form action="/logout" method="post" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button">Çıkış</button>
+              </form>
+            </nav>
+          <% } else { %>
+            <nav class="nav-links auth-nav">
+              <% if (currentPath === '/signup') { %>
+                <a class="btn small" href="/login">Giriş Yap</a>
+              <% } else { %>
+                <a class="btn small" href="/signup">Hesap Oluştur</a>
+              <% } %>
+            </nav>
+          <% } %>
+        </div>
+      </div>
+    </header>
+
+    <% if (flash) { %>
+      <div class="flash floating-flash <%= flash.type %>"><%= flash.message %></div>
+    <% } %>
+    <main class="container main-content">

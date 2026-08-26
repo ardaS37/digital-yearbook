@@ -1,0 +1,52 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Öğrenci Arama</h1>
+  <form method="get" action="/search" class="search-row">
+    <input
+      type="text"
+      name="q"
+      value="<%= q %>"
+      maxlength="80"
+      placeholder="Ad, öğrenci no veya sınıf ile ara"
+      aria-label="Öğrenci ara"
+      autocomplete="off"
+      data-live-search-input="students"
+    />
+    <select name="class_branch" aria-label="Sınıf şubesi">
+      <option value="">Tüm Sınıflar</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>" <%= selectedClass === branch ? 'selected' : '' %>><%= branch %></option>
+      <% }) %>
+    </select>
+    <button type="submit" class="btn">Ara</button>
+  </form>
+  <div class="live-suggestions" data-live-search-results></div>
+</section>
+
+<section class="card">
+  <h2>Sonuçlar</h2>
+  <% if (!q && !selectedClass) { %>
+    <div class="empty-state">
+      <h3>Aramaya buradan başla</h3>
+      <p>Ad, öğrenci numarası veya sınıf ile arama yapabilirsin.</p>
+    </div>
+  <% } else if (!students.length) { %>
+    <div class="empty-state">
+      <h3>Eşleşen öğrenci bulunamadı</h3>
+      <p>Başka bir arama terimi ya da farklı bir sınıf filtresi deneyin.</p>
+    </div>
+  <% } else { %>
+    <div class="profile-grid">
+      <% students.forEach(function(student) { %>
+        <a href="/profiles/<%= student.id %>" class="profile-card">
+          <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" loading="lazy" />
+          <h3><%= student.name %></h3>
+          <p><%= student.student_number || '-' %></p>
+          <p><%= student.class_branch || '-' %></p>
+          <p class="subtle"><%= student.slogan || student.bio || 'Kısa profil bilgisi bekleniyor.' %></p>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

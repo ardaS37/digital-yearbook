@@ -1,0 +1,54 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow auth-card auth-card-login">
+  <div class="auth-card-header">
+    <p class="eyebrow">Yıllık</p>
+    <h1>Giriş Yap</h1>
+    <p>Rolünüzü, kimlik bilginizi ve kişisel erişim kodunuzu girin.</p>
+  </div>
+  <p class="subtle">Öğrenciler öğrenci numarasıyla, öğretmen/yönetici/misafir hesapları ise yönetici tarafından verilen giriş kimliğiyle oturum açmalıdır.</p>
+  <form method="post" action="/login" class="stack-form auth-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div class="login-row">
+      <div class="login-field">
+        <label for="school_id">Okul</label>
+        <select id="school_id" name="school_id">
+          <option value="">Okul seç</option>
+          <% schools.forEach(function(school) { %>
+            <option value="<%= school.id %>"<%= (typeof defaultSchoolId !== 'undefined' && defaultSchoolId && school.id === defaultSchoolId) ? ' selected' : '' %>><%= school.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="login-field">
+        <label for="role">Rol</label>
+        <select id="role" name="role" required>
+          <option value="student">Öğrenci</option>
+          <option value="teacher">Öğretmen</option>
+          <option value="other">Diğer</option>
+          <option value="admin">Yönetici</option>
+          <option value="guest">Misafir</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="identifier">Kimlik Bilgisi</label>
+    <input id="identifier" name="identifier" maxlength="120" required placeholder="Öğrenci no veya giriş kimliği" />
+
+    <label for="access_code">Erişim Kodu</label>
+    <input id="access_code" name="access_code" type="password" maxlength="100" placeholder="Yeni onaylanan hesaplarda ilk girişte boş bırakılabilir" />
+
+    <button type="submit" class="btn">Giriş Yap</button>
+  </form>
+</section>
+
+  <section class="card compact-top auth-support-card">
+    <h2>Yasal Metinler</h2>
+    <p class="subtle">Giriş yapmadan önce ilgili metinleri inceleyebilirsiniz.</p>
+    <div class="inline-actions">
+      <a class="btn alt" href="/kvkk-aydinlatma-metni">KVKK Aydınlatma</a>
+      <a class="btn alt" href="/gizlilik-sozlesmesi">Gizlilik Sözleşmesi</a>
+      <a class="btn alt" href="/acik-riza-metni">Açık Rıza Metni</a>
+    </div>
+  </section>
+
+<%- include('partials/footer') %>

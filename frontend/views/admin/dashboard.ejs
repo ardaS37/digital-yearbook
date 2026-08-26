@@ -1,0 +1,849 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card admin-hero">
+  <div class="admin-hero-header">
+    <div>
+      <p class="eyebrow">Yönetim</p>
+      <h1>Yönetim Paneli</h1>
+      <p class="subtle">Kullanıcı, okul, kayıt, moderasyon ve yıllık işlemleri tek yerden yönetilir.</p>
+    </div>
+    <div class="admin-status-stack">
+      <span class="status-pill <%= yearbookLockState.locked ? 'danger' : 'success' %>">Yıllık: <%= yearbookLockState.locked ? 'Kilitli' : 'Açık' %></span>
+      <span class="status-pill <%= contentApprovalEnabled ? 'warning' : 'success' %>">Onay: <%= contentApprovalEnabled ? 'Aktif' : 'Kapalı' %></span>
+      <span class="status-pill">Başvuru: <%= signupRequests.length %></span>
+    </div>
+  </div>
+  <% if (maintenanceState) { %>
+    <div class="flash error compact-top">
+      Bakım modu aktif. <%= maintenanceState.message %>
+      <form action="/admin/maintenance/clear" method="post" class="inline-form compact-left">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button type="submit" class="link-button">İşareti Temizle</button>
+      </form>
+    </div>
+  <% } %>
+  <div class="grid four admin-stat-grid">
+    <a class="tile tile-link" href="#admin-users"><strong><%= stats.usersTotal %></strong><span>Toplam Kullanıcı</span></a>
+    <a class="tile tile-link" href="#admin-users"><strong><%= stats.studentsTotal %></strong><span>Öğrenciler</span></a>
+    <a class="tile tile-link" href="#admin-users"><strong><%= stats.teachersTotal %></strong><span>Öğretmenler</span></a>
+    <a class="tile tile-link" href="#admin-moderation"><strong><%= stats.messagesTotal %></strong><span>Mesajlar</span></a>
+  </div>
+  <div class="admin-quick-grid compact-top">
+    <div class="admin-quick-card">
+      <span class="admin-quick-title">Kullanıcı İşleri</span>
+      <p>Hesap açma, Excel aktarımı ve tekrar import edilebilir kullanıcı listesi.</p>
+      <div class="admin-action-board">
+        <a href="/admin/users/new" class="btn small">Kullanıcı Oluştur</a>
+        <a href="/admin/import" class="btn small alt">Excel İçe Aktar</a>
+        <a href="/admin/users/export-importable.xlsx" class="btn small alt">Import Excel İndir</a>
+      </div>
+    </div>
+    <div class="admin-quick-card">
+      <span class="admin-quick-title">Okul ve Başvurular</span>
+      <p>Okul ayarları, okul bazlı yönetim ve yeni hesap başvuruları.</p>
+      <div class="admin-action-board">
+        <a href="/admin/schools" class="btn small alt">Okul Ayarları</a>
+        <a href="/admin/signup-requests" class="btn small alt">Hesap Başvuruları<% if (signupRequests.length) { %> (<%= signupRequests.length %>)<% } %></a>
+      </div>
+    </div>
+    <div class="admin-quick-card">
+      <span class="admin-quick-title">Kayıt ve Güvenlik</span>
+      <p>Denetim kayıtları, giriş kayıtları, kod exportu ve log temizleme.</p>
+      <div class="admin-action-board">
+        <a href="/admin/logs" class="btn small alt">Kayıt Merkezi</a>
+        <a class="btn small alt" href="/admin/confirm?action=export-users-codes&back_to=%2Fadmin">Kodları Yenile + Export</a>
+        <a class="btn small alt" href="/admin/confirm?action=clear-logs&back_to=%2Fadmin">Logları Temizle</a>
+      </div>
+    </div>
+  </div>
+  <div class="admin-section-nav compact-top">
+    <span>Panel Bölümleri</span>
+    <a href="#admin-tools">Yönetim</a>
+    <a href="#admin-feature-settings">Sistem & Arayüz</a>
+    <a href="#admin-users">Kullanıcılar</a>
+    <a href="#admin-user-activity">Aktivite</a>
+    <a href="#admin-moderation">Moderasyon</a>
+    <a href="#admin-class-management">Sınıflar</a>
+    <a href="#admin-export">Yıllık Export</a>
+    <a href="#admin-backups">Kayıt/Yedek</a>
+  </div>
+</section>
+
+<div class="admin-dashboard-shell">
+  <aside class="admin-sidebar card">
+    <p class="eyebrow">Panel Haritası</p>
+    <a href="#admin-tools"><strong>Günlük Yönetim</strong><span>Bildirim, kilit</span></a>
+    <a href="#admin-feature-settings"><strong>Sistem / Oyunlar / Arayüz</strong><span>Özellik, oyun, tema, görünüm</span></a>
+    <a href="#admin-users"><strong>Kullanıcılar</strong><span>Liste, import, durum, aktivite</span></a>
+    <a href="#admin-class-management"><strong>Sınıflar</strong><span>İstatistik, taşıma, başkan</span></a>
+    <a href="#admin-export"><strong>Yıllık</strong><span>Export, arşiv, yıl sonu</span></a>
+    <a href="#admin-moderation"><strong>İçerik</strong><span>Duyuru, moderasyon, mesaj</span></a>
+    <a href="#admin-backups"><strong>Kayıt</strong><span>Log, yedek, güvenlik</span></a>
+  </aside>
+
+  <div class="admin-dashboard-main">
+    <div class="admin-group-title">
+      <span>01</span>
+      <div>
+        <h2>Günlük Yönetim</h2>
+        <p>En sık kullanılan yönetici aksiyonları.</p>
+      </div>
+    </div>
+
+<details id="admin-tools" class="card admin-accordion">
+  <summary>Yönetim Araçları: bildirim ve yıllık kilidi</summary>
+  <div class="grid two compact-top">
+    <form method="post" action="/admin/bulk-notifications" class="stack-form subtle-card">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <h3>Toplu Gelen Kutusu Bildirimi</h3>
+      <label>Başlık</label>
+      <input name="title" maxlength="120" required placeholder="Duyuru başlığı" />
+      <label>Mesaj</label>
+      <textarea name="body" maxlength="1000" required placeholder="Gelen kutusuna düşecek mesaj"></textarea>
+      <label>Okul</label>
+      <select name="school_id">
+        <option value="">Yetkili olduğum tüm okullar</option>
+        <% schools.forEach(function(school) { %><option value="<%= school.id %>"><%= school.name %></option><% }) %>
+      </select>
+      <label>Rol</label>
+      <select name="role">
+        <option value="">Tüm roller</option>
+        <option value="student">Öğrenci</option>
+        <option value="teacher">Öğretmen</option>
+        <option value="other">Diğer</option>
+        <option value="guest">Misafir</option>
+      </select>
+      <label>Sınıf</label>
+      <select name="class_branch">
+        <option value="">Tüm sınıflar</option>
+        <% allowedClasses.forEach(function(branch) { %><option value="<%= branch %>"><%= branch %></option><% }) %>
+      </select>
+      <label>Tekil kullanıcı ID’leri</label>
+      <input name="user_ids" maxlength="1000" placeholder="Örn: 12, 18, 25" />
+      <button type="submit" class="btn">Bildirim Gönder</button>
+    </form>
+
+    <form method="post" action="/admin/yearbook-lock" class="stack-form subtle-card">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <h3>Yıllık Kilitleme</h3>
+      <label class="checkbox-line">
+        <input type="checkbox" name="yearbook_locked" value="yes" <%= yearbookLockState.locked ? 'checked' : '' %> />
+        <span>Kullanıcılar için sistemi salt okunur yap</span>
+      </label>
+      <label>Kilit mesajı</label>
+      <textarea name="yearbook_lock_message" maxlength="300"><%= yearbookLockState.message %></textarea>
+      <button type="submit" class="btn alt">Kilit Ayarını Kaydet</button>
+    </form>
+  </div>
+</details>
+
+    <div class="admin-group-title">
+      <span>02</span>
+      <div>
+        <h2>Sistem ve Görünüm</h2>
+        <p>Özellikler, moderasyon kuralları ve ana görünüm ayarları.</p>
+      </div>
+    </div>
+
+<details id="admin-feature-settings" class="card admin-accordion">
+  <summary>Sistem, Oyunlar ve Arayüz Ayarları</summary>
+
+  <div class="admin-tabs compact-top">
+    <div class="admin-tab-nav" role="tablist">
+      <button class="admin-tab-btn is-active" data-tab="sistem" role="tab" type="button">⚙️ Sistem</button>
+      <button class="admin-tab-btn" data-tab="oyunlar" role="tab" type="button">🎮 Oyunlar</button>
+      <button class="admin-tab-btn" data-tab="arayuz" role="tab" type="button">🎨 Arayüz</button>
+    </div>
+
+    <%# ── Sistem sekmesi ──────────────────────────────── %>
+    <div class="admin-tab-panel" id="admin-tab-sistem">
+      <form method="post" action="/admin/features" class="stack-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="form_scope" value="sistem" />
+        <% featureDefinitions.forEach(function(feature) { %><input type="hidden" name="feature_<%= feature.key %>_fallback" value="no" /><% }) %>
+
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">Site Özellikleri</h3>
+          <div class="stack-list compact-top">
+            <% featureDefinitions.forEach(function(feature) { %>
+              <label class="checkbox-line">
+                <input type="checkbox" name="feature_<%= feature.key %>" value="yes" <%= currentFeatureFlags[feature.key] !== false ? 'checked' : '' %> />
+                <span><strong><%= feature.label %></strong> <span class="subtle">— <%= feature.description %></span></span>
+              </label>
+            <% }) %>
+          </div>
+        </div>
+
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">İçerik ve Onay</h3>
+          <div class="stack-list compact-top">
+            <label class="checkbox-line">
+              <input type="checkbox" name="content_approval_enabled" value="yes" <%= contentApprovalEnabled ? 'checked' : '' %> />
+              <span><strong>İçerik Onayı</strong> <span class="subtle">— Mesaj, yorum ve profil yazılarını yayınlamadan önce onaya gönder</span></span>
+            </label>
+            <% profilePhotoEditModes.forEach(function(mode) { %>
+              <label class="checkbox-line">
+                <input type="checkbox" name="profile_photo_edit_mode" value="<%= mode.key %>" <%= yearEndSettings.profilePhotoEditMode === mode.key ? 'checked' : '' %> />
+                <span><strong>Profil Fotoğraf Yetkisi</strong> <span class="subtle">— <%= mode.label %></span></span>
+              </label>
+            <% }) %>
+          </div>
+        </div>
+
+        <div class="admin-tab-actions">
+          <button type="submit" class="btn">Sistem Ayarlarını Kaydet</button>
+          <form method="post" action="/admin/users/unlock-photo-locks" class="inline-form" onsubmit="return confirm('Tüm kullanıcıların profil fotoğraf kilidi açılsın mı?')">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="btn alt">Foto Kilidini Aç</button>
+          </form>
+          <form method="post" action="/admin/users/reset-kvkk-all" class="inline-form" onsubmit="return confirm('Tüm kullanıcıların KVKK onayı sıfırlansın mı? Bir sonraki girişlerinde tekrar onay isteyecek.')">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="btn alt">Tüm KVKK Onaylarını Sıfırla</button>
+          </form>
+        </div>
+      </form>
+
+      <form method="post" action="/admin/moderation-settings" class="stack-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">Moderasyon Kuralları</h3>
+          <div class="stack-form compact-top">
+            <label for="banned_words">Yasaklı kelimeler</label>
+            <textarea id="banned_words" name="banned_words" placeholder="Virgül veya satır satır yaz"><%= moderationSettings.bannedWords %></textarea>
+            <div class="stack-list">
+              <label class="checkbox-line">
+                <input type="checkbox" name="block_links" value="yes" <%= moderationSettings.blockLinks ? 'checked' : '' %> />
+                <span>Linkleri engelle</span>
+              </label>
+              <label class="checkbox-line">
+                <input type="checkbox" name="manager_link_bypass" value="yes" <%= moderationSettings.managerLinkBypass ? 'checked' : '' %> />
+                <span>Admin/müdür içeriklerinde linke izin ver</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn alt">Moderasyon Ayarlarını Kaydet</button>
+      </form>
+    </div>
+
+    <%# ── Oyunlar sekmesi ─────────────────────────────── %>
+    <div class="admin-tab-panel" id="admin-tab-oyunlar" hidden>
+      <form method="post" action="/admin/features" class="stack-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="form_scope" value="oyunlar" />
+        <% gameMenuDefinitions.forEach(function(feature) { %><input type="hidden" name="feature_<%= feature.key %>_fallback" value="no" /><% }) %>
+        <p class="subtle">Kapalı oyunlar oyunlar sayfasındaki kart listesinden gizlenir.</p>
+        <div class="game-toggle-list stack-list compact-top">
+          <% gameMenuDefinitions.forEach(function(feature) { %>
+            <label class="checkbox-line">
+              <input type="checkbox" name="feature_<%= feature.key %>" value="yes" <%= currentFeatureFlags[feature.key] !== false ? 'checked' : '' %> />
+              <span><strong><%= feature.label %></strong> <span class="subtle">— <%= feature.description %></span></span>
+            </label>
+          <% }) %>
+        </div>
+        <div class="admin-tab-actions">
+          <button type="submit" class="btn">Oyun Ayarlarını Kaydet</button>
+        </div>
+      </form>
+    </div>
+
+    <%# ── Arayüz sekmesi ─────────────────────────────── %>
+    <div class="admin-tab-panel" id="admin-tab-arayuz" hidden>
+      <form method="post" action="/admin/features" class="stack-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="form_scope" value="arayuz" />
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">Cam Tema</h3>
+          <div class="stack-list compact-top">
+            <label class="checkbox-line">
+              <input type="checkbox" name="liquid_glass_enabled" value="yes" <%= yearEndSettings.liquidGlassEnabled ? 'checked' : '' %> />
+              <span><strong>Cam Tema Aktif</strong> <span class="subtle">— Cam görünümlü bulanık yüzeyleri tüm arayüzde aç</span></span>
+            </label>
+          </div>
+          <div class="grid two compact-top">
+            <div>
+              <label for="liquid_glass_preset">Arka plan modu</label>
+              <select id="liquid_glass_preset" name="liquid_glass_preset">
+                <option value="soft"     <%= yearEndSettings.liquidGlassPreset === 'soft'     ? 'selected' : '' %>>Soft</option>
+                <option value="vivid"    <%= yearEndSettings.liquidGlassPreset === 'vivid'    ? 'selected' : '' %>>Vivid</option>
+                <option value="mist"     <%= yearEndSettings.liquidGlassPreset === 'mist'     ? 'selected' : '' %>>Mist</option>
+                <option value="gradient" <%= yearEndSettings.liquidGlassPreset === 'gradient' ? 'selected' : '' %>>V3 Gradyan ✨</option>
+              </select>
+            </div>
+            <div>
+              <label for="liquid_glass_style">Yüzey tipi</label>
+              <select id="liquid_glass_style" name="liquid_glass_style">
+                <option value="solid" <%= yearEndSettings.liquidGlassStyle === 'solid' ? 'selected' : '' %>>Solid — Okunaklı</option>
+                <option value="clear" <%= yearEndSettings.liquidGlassStyle === 'clear' ? 'selected' : '' %>>Clear — Şeffaf</option>
+                <option value="v2"    <%= yearEndSettings.liquidGlassStyle === 'v2'    ? 'selected' : '' %>>V2 — Cam Tema</option>
+                <option value="v3"    <%= yearEndSettings.liquidGlassStyle === 'v3'    ? 'selected' : '' %>>V3 — Cam Tema ✨</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">Kullanıcı Tema Rengi</h3>
+          <p class="subtle compact-top">Kullanıcıların Ayarlar sayfasında kendi renk tercihlerini seçmesi her zaman mümkündür. Bu ayar, özel renk seçmemiş kullanıcılara uygulanır.</p>
+          <label for="user_accent_mode" class="compact-top">Renk modu</label>
+          <select id="user_accent_mode" name="user_accent_mode">
+            <option value="default" <%= yearEndSettings.userAccentMode === 'default' ? 'selected' : '' %>>Varsayılan (global tema rengi)</option>
+            <option value="random"  <%= yearEndSettings.userAccentMode === 'random'  ? 'selected' : '' %>>Her oturumda rastgele</option>
+          </select>
+        </div>
+
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">Ana Sayfa Karşılama Metni</h3>
+          <p class="subtle compact-top">Giriş sonrası ana sayfadaki hero bölümünde görünen açıklama. Boş bırakılırsa varsayılan metin gösterilir.</p>
+          <textarea id="home_hero_text" name="home_hero_text" rows="3" maxlength="500" placeholder="Sınıfları gezebilir, öğretmen profillerini inceleyebilir ve tek seferlik yıllık mesajlarını yazabilirsin."><%= yearEndSettings.homeHeroText %></textarea>
+        </div>
+
+        <div class="subtle-card">
+          <h3 class="admin-tab-section-title">Ana Sayfa Arka Planı</h3>
+          <% if (homeBackgroundPath) { %>
+            <p class="compact-top"><img src="<%= homeBackgroundPath %>" alt="Ana sayfa arka planı" class="admin-home-background-preview" /></p>
+          <% } else { %>
+            <p class="compact-top subtle">Henüz özel bir arka plan seçilmedi.</p>
+          <% } %>
+        </div>
+
+        <div class="admin-tab-actions">
+          <button type="submit" class="btn">Arayüz Ayarlarını Kaydet</button>
+        </div>
+      </form>
+      <form action="/admin/home-background?_csrf=<%= encodeURIComponent(csrfToken) %>" method="post" enctype="multipart/form-data" class="stack-form compact-top">
+        <label for="home_background">Yeni arka plan görseli</label>
+        <input id="home_background" type="file" name="home_background" accept="image/*" required />
+        <button type="submit" class="btn small alt">Arka Planı Güncelle</button>
+        <% if (homeBackgroundPath) { %>
+          <form action="/admin/home-background/delete" method="post" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="link-button danger">Arka Planı Kaldır</button>
+          </form>
+        <% } %>
+      </form>
+    </div>
+  </div>
+</details>
+
+    <div class="admin-group-title">
+      <span>03</span>
+      <div>
+        <h2>Yıllık ve Arşiv</h2>
+        <p>Export, kapanış, mezuniyet ve arşiv akışları.</p>
+      </div>
+    </div>
+
+<details id="admin-year-end" class="card admin-accordion">
+  <summary>Yıllık: yıl sonu ayarları</summary>
+  <form action="/admin/year-end-settings" method="post" class="stack-form compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <label for="graduation_date">Mezuniyet Tarihi</label>
+    <input id="graduation_date" type="date" name="graduation_date" value="<%= yearEndSettings.graduationDate %>" />
+    <label for="closing_title">Kapanış Başlığı</label>
+    <input id="closing_title" name="closing_title" maxlength="120" value="<%= yearEndSettings.closingTitle %>" />
+    <label for="closing_body">Kapanış Metni</label>
+    <textarea id="closing_body" name="closing_body" maxlength="2000"><%= yearEndSettings.closingBody %></textarea>
+    <label class="checkbox-line">
+      <input type="checkbox" name="archive_public" value="yes" <%= yearEndSettings.archivePublic ? 'checked' : '' %> />
+      Arşiv menüsünü herkese aç
+    </label>
+    <button type="submit" class="btn small">Yıl Sonu Ayarlarını Kaydet</button>
+  </form>
+  <p class="compact-top"><a href="/closing" target="_blank" rel="noopener noreferrer">Kapanış sayfasını aç</a></p>
+  <p><a href="/archive" target="_blank" rel="noopener noreferrer">Arşiv sayfasını aç</a></p>
+</details>
+
+<details id="admin-export" class="card admin-accordion">
+  <summary>Yıllık: gelişmiş dışa aktarma</summary>
+  <p class="compact-top">
+    <a class="btn small" href="/admin/yearbook-book">Kitap Şablonlu PDF Export Menüsü</a>
+  </p>
+  <form method="get" action="/admin/yearbook-export.html" class="stack-form compact-top">
+    <label for="export_class_branch">Kapsam</label>
+    <select id="export_class_branch" name="class_branch">
+      <option value="">Tüm okul</option>
+      <% allClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>"><%= branch %></option>
+      <% }) %>
+    </select>
+    <div class="inline-actions">
+      <button type="submit" class="btn small">HTML İndir</button>
+      <button type="submit" formaction="/admin/yearbook-export.pdf" class="btn small alt">PDF İndir</button>
+    </div>
+  </form>
+</details>
+
+    <div class="admin-group-title">
+      <span>04</span>
+      <div>
+        <h2>Kullanıcılar ve Sınıflar</h2>
+        <p>Hesap, sınıf, kategori ve profil tamamlama yönetimi.</p>
+      </div>
+    </div>
+
+<details id="admin-teacher-categories" class="card admin-accordion">
+  <summary>Kullanıcılar: öğretmen kategorileri</summary>
+  <p class="subtle">Mevcut tüm öğretmenlerin alt kategorisini tek seferde "Öğretmen" olarak sıfırlayabilirsiniz.</p>
+  <p class="compact-top">
+    <a class="btn alt" href="/admin/confirm?action=reset-teacher-categories&back_to=%2Fadmin">Tüm Öğretmenleri Öğretmen Yap</a>
+  </p>
+</details>
+
+<details id="admin-user-activity" class="card admin-accordion">
+  <summary>Kullanıcılar: aktivite ve eksik profil görünümü</summary>
+  <p class="subtle compact-top">Son hareket, profil güncelleme, tamamlanma yüzdesi ve bekleyen onay sayıları birlikte görünür.</p>
+  <p class="compact-top"><a class="btn small alt" href="/admin/users/activity.csv">Aktivite CSV İndir</a></p>
+  <% if (!activityUsers.length) { %>
+    <p>Kullanıcı aktivitesi yok.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr><th>Ad</th><th>Rol</th><th>Okul</th><th>Sınıf</th><th>Son Giriş</th><th>Profil Güncelleme</th><th>Tamamlanma</th><th>Bekleyen Onay</th><th>Eksikler</th></tr>
+      </thead>
+      <tbody>
+        <% activityUsers.forEach(function(user) { %>
+          <tr>
+            <td><a href="/profiles/<%= user.id %>"><%= user.name %></a></td>
+            <td><%= user.role %></td>
+            <td><%= (schools.find((school) => school.id === user.school_id) || {}).name || '-' %></td>
+            <td><%= user.class_branch || '-' %></td>
+            <td><%= user.last_active_at || '-' %></td>
+            <td><%= user.updated_at || '-' %></td>
+            <td><strong><%= user.completion.percent %>%</strong></td>
+            <td><%= user.pendingApprovalCount %></td>
+            <td><%= user.completion.missing.length ? user.completion.missing.join(', ') : '-' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</details>
+
+    <div class="admin-group-title">
+      <span>05</span>
+      <div>
+        <h2>İçerik ve İzleme</h2>
+        <p>Duyuru, moderasyon, mesaj ve kullanıcı geri bildirimleri.</p>
+      </div>
+    </div>
+
+<details id="admin-announcements" class="card admin-accordion">
+  <summary>İçerik: duyurular</summary>
+  <form action="/announcements" method="post" class="stack-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input name="title" maxlength="120" placeholder="Duyuru başlığı" required />
+    <textarea name="body" maxlength="2000" placeholder="Duyuru metni" required></textarea>
+    <button type="submit" class="btn">Duyuru Yayınla</button>
+  </form>
+
+  <% if (!announcements.length) { %>
+    <p class="compact-top">Henüz duyuru yok.</p>
+  <% } else { %>
+    <div class="compact-top stack-list">
+      <% announcements.forEach(function(item) { %>
+        <div class="notice">
+          <strong><%= item.title %></strong>
+          <p><%= item.body %></p>
+          <p class="subtle"><%= item.author_name %> - <%= item.created_at %> - <%= item.is_active ? 'Yayında' : 'Pasif' %></p>
+          <form action="/admin/announcements/<%= item.id %>/toggle" method="post" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="link-button"><%= item.is_active ? 'Pasife Al' : 'Yayına Al' %></button>
+          </form>
+          <form action="/admin/announcements/<%= item.id %>/delete" method="post" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="link-button danger">Sil</button>
+          </form>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</details>
+
+<details id="admin-class-stats" class="card admin-accordion">
+  <summary>Sınıflar: istatistikler</summary>
+  <ul>
+    <% allowedClasses.forEach(function(branch) { %>
+      <% const found = classStats.find((s) => s.class_branch === branch); %>
+      <li><strong><%= branch %></strong>: <%= found ? found.total : 0 %> öğrenci</li>
+    <% }); %>
+  </ul>
+</details>
+
+<details id="admin-class-management" class="card admin-accordion">
+  <summary>Sınıflar: yönetim ve toplu taşıma</summary>
+  <form method="post" action="/admin/classes" class="search-row compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <input type="text" name="branch" maxlength="20" placeholder="Yeni sınıf adı (örn. 11-A)" required />
+    <input type="color" name="theme_color" value="#0d6e6e" />
+    <button type="submit" class="btn">Sınıf Ekle</button>
+  </form>
+
+  <form method="post" action="/admin/classes/bulk-move" class="search-row compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <select name="from_class_branch" required>
+      <option value="">Kaynak sınıf</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>"><%= branch %></option>
+      <% }) %>
+    </select>
+    <select name="to_class_branch" required>
+      <option value="">Hedef sınıf</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>"><%= branch %></option>
+      <% }) %>
+    </select>
+    <button type="submit" class="btn alt">Toplu Sınıf Taşı</button>
+  </form>
+
+  <table class="compact-top">
+    <thead>
+      <tr><th>Sınıf</th><th>Yıl</th><th>Öğrenci</th><th>Durum</th><th>Tema</th><th>İşlem</th></tr>
+    </thead>
+    <tbody>
+      <% classRecords.forEach(function(item) { %>
+        <tr>
+          <td><%= item.branch %></td>
+          <td><%= item.school_year_label || '-' %></td>
+          <td><%= item.student_total %></td>
+          <td>
+            <% if (item.deleted_at) { %>Silinmiş
+            <% } else if (item.is_archived) { %>Arşiv
+            <% } else if (item.is_active) { %>Aktif
+            <% } else { %>-<% } %>
+          </td>
+          <td><%= item.theme_color || '-' %></td>
+          <td>
+            <% if (item.deleted_at) { %>
+              <form method="post" action="/admin/classes/<%= encodeURIComponent(item.branch) %>/recover" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button">Recover</button>
+              </form>
+            <% } else { %>
+              <a class="link-button danger" href="/admin/confirm?action=delete-class&class_branch=<%= encodeURIComponent(item.branch) %>&back_to=%2Fadmin">Kaldır</a>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</details>
+
+<details id="admin-new-year" class="card admin-accordion">
+  <summary>Yıllık: yeni seneye başla</summary>
+  <form method="get" action="/admin/confirm" class="stack-form compact-top">
+    <input type="hidden" name="action" value="start-new-year" />
+    <input type="hidden" name="back_to" value="/admin" />
+    <input name="next_year_label" maxlength="40" placeholder="Örn. 2026-2027" required />
+    <input name="next_class_branches" maxlength="200" placeholder="Örn. 12-A,12-B,12-C" required />
+    <button type="submit" class="btn">Yeni Yıl Geçişini Başlat</button>
+  </form>
+  <% if (schoolYears.length) { %>
+    <div class="stack-list compact-top">
+      <% schoolYears.forEach(function(year) { %>
+        <div class="notice">
+          <strong><%= year.label %></strong>
+          <p class="subtle"><%= year.is_current ? 'Aktif yıl' : year.is_archived ? 'Arşiv yıl' : 'Durum yok' %> - <%= year.created_at %></p>
+          <% if (year.is_archived) { %>
+            <p class="compact-top">
+              <a href="/admin/archive-years/<%= year.id %>/download" class="btn small alt">Arşivi İndir</a>
+            </p>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <form action="/admin/archive-years/import?_csrf=<%= encodeURIComponent(csrfToken) %>" method="post" enctype="multipart/form-data" class="stack-form compact-top">
+    <label for="archive_year_file">Eski yıl arşivi yükle (.json)</label>
+    <input id="archive_year_file" type="file" name="archive_year_file" accept=".json,application/json,text/json" required />
+    <button type="submit" class="btn small alt">Arşivi Yükle</button>
+  </form>
+</details>
+
+<details id="admin-advanced-report" class="card admin-accordion">
+  <summary>Raporlar: gelişmiş yıllık raporu</summary>
+  <div class="grid four">
+    <div class="tile"><strong><%= reportStats.activeStudents %></strong><span>Aktif Öğrenci</span></div>
+    <div class="tile"><strong><%= reportStats.inactiveUsers %></strong><span>Pasif Hesap</span></div>
+    <div class="tile"><strong><%= reportStats.graduatedStudents %></strong><span>Mezun</span></div>
+    <div class="tile"><strong><%= reportStats.archivedStudents %></strong><span>Arşiv Öğrenci</span></div>
+  </div>
+</details>
+
+<details id="admin-users" class="card admin-accordion">
+  <summary>Kullanıcılar: liste, filtre ve durum yönetimi (<%= filters.filteredUsersTotal %>)</summary>
+  <form method="get" action="/admin" class="search-row compact-top">
+    <input type="text" name="q" value="<%= filters.search %>" placeholder="Ad, no veya giriş kimliği ara" />
+    <select name="role">
+      <option value="">Tüm Roller</option>
+      <option value="student" <%= filters.roleFilter === 'student' ? 'selected' : '' %>>Öğrenci</option>
+      <option value="teacher" <%= filters.roleFilter === 'teacher' ? 'selected' : '' %>>Öğretmen</option>
+      <option value="other" <%= filters.roleFilter === 'other' ? 'selected' : '' %>>Diğer</option>
+      <option value="admin" <%= filters.roleFilter === 'admin' ? 'selected' : '' %>>Yönetici</option>
+      <option value="guest" <%= filters.roleFilter === 'guest' ? 'selected' : '' %>>Misafir</option>
+    </select>
+    <select name="school_id">
+      <option value="">Tüm Okullar</option>
+      <% schools.forEach(function(school) { %>
+        <option value="<%= school.id %>" <%= filters.schoolFilter === school.id ? 'selected' : '' %>><%= school.name %></option>
+      <% }) %>
+    </select>
+    <select name="completion">
+      <option value="">Tüm Tamamlama</option>
+      <option value="missing_photo" <%= filters.completionFilter === 'missing_photo' ? 'selected' : '' %>>Fotoğraf eksik</option>
+      <option value="missing_slogan" <%= filters.completionFilter === 'missing_slogan' ? 'selected' : '' %>>Slogan eksik</option>
+      <option value="missing_bio" <%= filters.completionFilter === 'missing_bio' ? 'selected' : '' %>>Biyografi eksik</option>
+      <option value="missing_free_text" <%= filters.completionFilter === 'missing_free_text' ? 'selected' : '' %>>Serbest yazı eksik</option>
+      <option value="missing_contact" <%= filters.completionFilter === 'missing_contact' ? 'selected' : '' %>>İletişim eksik</option>
+    </select>
+    <button type="submit" class="btn">Filtrele</button>
+  </form>
+  <form method="get" action="/admin" class="search-row compact-top">
+    <input type="hidden" name="q" value="<%= filters.search %>" />
+    <input type="hidden" name="school_id" value="<%= filters.schoolFilter %>" />
+    <input type="hidden" name="completion" value="<%= filters.completionFilter %>" />
+    <select name="class_branch">
+      <option value="">Tüm Sınıflar</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>" <%= filters.classFilter === branch ? 'selected' : '' %>><%= branch %></option>
+      <% }) %>
+    </select>
+    <input type="hidden" name="role" value="<%= filters.roleFilter %>" />
+    <button type="submit" class="btn alt">Sınıf Uygula</button>
+  </form>
+  <p class="subtle compact-top">Toplam <%= filters.filteredUsersTotal %> sonuç, sayfa <%= filters.currentPage %>/<%= filters.totalPages %></p>
+  <div class="inline-actions compact-top">
+    <form method="post" action="/admin/users/status/bulk" class="inline-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="status" value="active" />
+      <button type="submit" class="btn small">Tüm Hesapları Aktif Et</button>
+    </form>
+    <form method="post" action="/admin/users/status/bulk" class="inline-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input type="hidden" name="status" value="inactive" />
+      <button type="submit" class="btn small alt">Tüm Hesapları Pasif Et</button>
+    </form>
+  </div>
+  <p class="subtle">Yönetici hesapları bu toplu işlemden hariç tutulur.</p>
+
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Ad</th><th>Rol</th><th>Giriş Kimliği</th><th>Öğrenci No</th><th>Okul</th><th>Sınıf</th><th>Durum</th><th>Tamamlama</th><th>İşlemler</th></tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function(user) { %>
+        <tr>
+          <td><%= user.id %></td>
+          <td><% if (user.role === 'admin') { %><%= user.name %><% } else { %><a href="/profiles/<%= user.id %>"><%= user.name %></a><% } %></td>
+          <td><%= user.role %><% if (user.president_class_branch) { %> - başkan<% } %></td>
+          <td><%= user.login_identifier || '-' %></td>
+          <td><%= user.student_number || '-' %></td>
+          <td><%= (schools.find((school) => school.id === user.school_id) || {}).name || '-' %></td>
+          <td><%= user.class_branch || '-' %></td>
+          <td>
+            <form method="post" action="/admin/users/<%= user.id %>/status" class="inline-form">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <select name="status">
+                <option value="active" <%= user.status === 'active' || !user.status ? 'selected' : '' %>>Aktif</option>
+                <option value="inactive" <%= user.status === 'inactive' ? 'selected' : '' %>>Pasif</option>
+                <option value="graduated" <%= user.status === 'graduated' ? 'selected' : '' %>>Mezun</option>
+                <option value="archived" <%= user.status === 'archived' ? 'selected' : '' %>>Arşiv</option>
+              </select>
+              <button type="submit" class="btn small alt">Kaydet</button>
+            </form>
+          </td>
+          <td>
+            <strong><%= user.completion.percent %>%</strong>
+            <% if (user.completion.missing.length) { %><br /><small>Eksik: <%= user.completion.missing.join(', ') %></small><% } %>
+          </td>
+          <td>
+            <a href="/admin/users/<%= user.id %>/edit">Düzenle</a>
+            <a class="link-button danger compact-left" href="/admin/confirm?action=delete-user&target_id=<%= user.id %>&back_to=%2Fadmin">Sil</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div class="class-filter compact-top">
+    <% for (let i = 1; i <= filters.totalPages; i += 1) { %>
+      <a
+        class="chip <%= filters.currentPage === i ? 'active' : '' %>"
+        href="/admin?page=<%= i %>&q=<%= encodeURIComponent(filters.search) %>&role=<%= encodeURIComponent(filters.roleFilter) %>&school_id=<%= encodeURIComponent(filters.schoolFilter) %>&completion=<%= encodeURIComponent(filters.completionFilter) %>&class_branch=<%= encodeURIComponent(filters.classFilter) %>#admin-users"
+      ><%= i %></a>
+    <% } %>
+  </div>
+</details>
+
+<details id="admin-moderation" class="card admin-accordion">
+  <summary>İçerik: moderasyon<% if (flaggedMessages.length || reportedUsers.length) { %> (<%= flaggedMessages.length + reportedUsers.length %>)<% } %></summary>
+  <% if (!flaggedMessages.length && !reportedUsers.length) { %>
+    <p>Bekleyen moderasyon kaydı yok.</p>
+  <% } else { %>
+    <% if (reportedUsers.length) { %>
+      <h3>Kullanıcı Bildirimleri</h3>
+      <table class="compact-top">
+        <thead>
+          <tr><th>Bildiren</th><th>Kullanıcı</th><th>Detay</th><th>Neden</th><th>Tarih</th><th>İşlem</th></tr>
+        </thead>
+        <tbody>
+          <% reportedUsers.forEach(function(report) { %>
+            <tr>
+              <td><%= report.reporter_name %></td>
+              <td><a href="/profiles/<%= report.reported_user_id %>"><%= report.reported_user_name %></a></td>
+              <td>
+                <%= report.reported_user_role %>
+                <% if (report.reported_user_class_branch) { %> - <%= report.reported_user_class_branch %><% } %>
+              </td>
+              <td><%= report.reason %></td>
+              <td><%= report.created_at %></td>
+              <td>
+                <form action="/admin/user-reports/<%= report.id %>/resolve" method="post" class="inline-form">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button type="submit" class="link-button">Çöz</button>
+                </form>
+                <form action="/admin/user-reports/<%= report.id %>/dismiss" method="post" class="inline-form">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button type="submit" class="link-button danger">Reddet</button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+
+    <% if (flaggedMessages.length) { %>
+      <% if (reportedUsers.length) { %><h3 class="compact-top">Mesaj Bildirimleri</h3><% } else { %><h3>Mesaj Bildirimleri</h3><% } %>
+    <table>
+      <thead>
+        <tr><th>Bildiren</th><th>Mesaj</th><th>Akış</th><th>Neden</th><th>Tarih</th><th>İşlem</th></tr>
+      </thead>
+      <tbody>
+        <% flaggedMessages.forEach(function(flag) { %>
+          <tr>
+            <td><%= flag.reporter_name %></td>
+            <td><%= flag.message %></td>
+            <td><%= flag.sender_name %> -> <%= flag.receiver_name %></td>
+            <td><%= flag.reason %></td>
+            <td><%= flag.created_at %></td>
+            <td>
+              <form action="/admin/flags/<%= flag.id %>/resolve" method="post" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button">Çöz</button>
+              </form>
+              <form action="/admin/flags/<%= flag.id %>/dismiss" method="post" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button danger">Reddet</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  <% } %>
+</details>
+
+<details id="admin-recent-messages" class="card admin-accordion">
+  <summary>İçerik: son mesajlar</summary>
+  <% if (!recentMessages.length) { %>
+    <p>Henüz mesaj yok.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr><th>Gönderen</th><th>Alıcı</th><th>Mesaj</th><th>Tarih</th><th>İşlemler</th></tr>
+      </thead>
+      <tbody>
+        <% recentMessages.forEach(function(msg) { %>
+          <tr>
+            <td><%= msg.sender_name %></td>
+            <td><%= msg.receiver_name %></td>
+            <td><%= msg.message %></td>
+            <td><%= msg.created_at %></td>
+            <td>
+              <a class="link-button danger" href="/admin/confirm?action=delete-message&target_id=<%= msg.id %>&back_to=%2Fadmin">Sil</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</details>
+
+    <div class="admin-group-title">
+      <span>06</span>
+      <div>
+        <h2>Kayıt ve Güvenlik</h2>
+        <p>Yedek dosyaları, geri yükleme ve sistem kayıtlarına bağlı güvenli işlemler.</p>
+      </div>
+    </div>
+
+<details id="admin-backups" class="card admin-accordion">
+  <summary>Kayıt ve Güvenlik: yedekler</summary>
+  <form action="/admin/compress-all-images" method="post" class="inline-form" onsubmit="this.querySelector('button').disabled=true;this.querySelector('button').textContent='Sıkıştırılıyor…'">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <button type="submit" class="btn small alt">Tüm Resimleri Sıkıştır</button>
+  </form>
+  <p class="subtle compact-top">Tüm profil ve galeri fotoğraflarını maks. 1920px / %80 kaliteye sıkıştırır. Sunucuda yer açar. Tamamlanması yüzlerce resimde biraz sürebilir.</p>
+  <form action="/admin/backups/create" method="post" class="inline-form compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <button type="submit" class="btn small">Yeni Yedek Oluştur</button>
+  </form>
+  <form action="/admin/backups/import?_csrf=<%= encodeURIComponent(csrfToken) %>" method="post" enctype="multipart/form-data" class="stack-form compact-top">
+    <label for="backup_archive">Bilgisayardan yedek yükle (.tar.gz / .tgz)</label>
+    <input id="backup_archive" type="file" name="backup_archive" accept=".tar.gz,.tgz,application/gzip,application/x-gzip" required />
+    <button type="submit" class="btn small alt">Yedeği İçeri Aktar</button>
+  </form>
+  <% if (!backups.length) { %>
+    <p class="compact-top">Henüz yedek yok.</p>
+  <% } else { %>
+    <table class="compact-top">
+      <thead>
+        <tr><th>Yedek</th><th>Tarih</th><th>İşlem</th></tr>
+      </thead>
+      <tbody>
+        <% backups.forEach(function(backup) { %>
+          <tr>
+            <td><%= backup.name %></td>
+            <td><%= backup.createdAt %></td>
+            <td>
+              <a href="/admin/backups/<%= encodeURIComponent(backup.name) %>/download">İndir</a>
+              <a class="compact-left" href="/admin/confirm?action=restore-backup&backup_name=<%= encodeURIComponent(backup.name) %>&back_to=%2Fadmin">Geri Yükle</a>
+              <a class="link-button danger compact-left" href="/admin/confirm?action=delete-backup&backup_name=<%= encodeURIComponent(backup.name) %>&back_to=%2Fadmin">Sil</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</details>
+
+<details id="admin-president-history" class="card admin-accordion">
+  <summary>Sınıflar: başkan geçmişi</summary>
+  <% if (!presidentHistory.length) { %>
+    <p>Henüz başkan değişim kaydı yok.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr><th>Tarih</th><th>Sınıf</th><th>Başkan</th><th>Aksiyon</th><th>Yapan</th></tr>
+      </thead>
+      <tbody>
+        <% presidentHistory.forEach(function(item) { %>
+          <tr>
+            <td><%= item.created_at %></td>
+            <td><%= item.class_branch %></td>
+            <td><%= item.president_name || '-' %></td>
+            <td><%= item.action %></td>
+            <td><%= item.actor_name || 'Sistem' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</details>
+
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

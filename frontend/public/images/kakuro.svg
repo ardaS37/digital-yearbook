@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="kakuro-title kakuro-desc">
+  <title id="kakuro-title">KAKURO oyun kartı</title>
+  <desc id="kakuro-desc">Kakuro için ortak temada oyun kartı görseli.</desc>
+  <defs>
+    <linearGradient id="kakuro-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#183a55"/>
+      <stop offset="1" stop-color="#2e6e72"/>
+    </linearGradient>
+    <filter id="kakuro-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#081018" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" fill="url(#kakuro-bg)"/>
+  <circle cx="138" cy="96" r="126" fill="#f0d797" opacity=".18"/>
+  <circle cx="820" cy="424" r="164" fill="#ffffff" opacity=".08"/>
+  <g filter="url(#kakuro-shadow)">
+    <rect x="56" y="42" width="848" height="456" rx="34" fill="rgba(14,20,26,.18)"/>
+    <rect x="74" y="60" width="812" height="420" rx="28" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.16)"/>
+    <rect x="108" y="102" width="744" height="250" rx="26" fill="rgba(8,12,17,.2)" stroke="rgba(255,255,255,.12)"/>
+
+    <g transform="translate(294 120)">
+      <rect x="0" y="0" width="372" height="220" rx="18" fill="#223543"/>
+      <g stroke="#62788d" stroke-width="3">
+        <path d="M62 0v220M124 0v220M186 0v220M248 0v220M310 0v220"/>
+        <path d="M0 44h372M0 88h372M0 132h372M0 176h372"/>
+      </g>
+      <rect x="0" y="0" width="62" height="44" fill="#223543"/>
+      <rect x="62" y="0" width="62" height="44" fill="#223543"/>
+      <rect x="0" y="44" width="62" height="44" fill="#223543"/>
+      <g fill="#f6ebc9" font-family="Verdana, sans-serif" font-size="16" font-weight="700">
+        <text x="80" y="30">7</text>
+        <text x="24" y="72">12</text>
+        <text x="204" y="72">10</text>
+      </g>
+      <g fill="#f7f1e4">
+        <rect x="124" y="44" width="62" height="44"/>
+        <rect x="186" y="44" width="62" height="44"/>
+        <rect x="248" y="44" width="62" height="44"/>
+      </g>
+      <g fill="#20425b" font-family="Georgia, serif" font-size="28" font-weight="700">
+        <text x="145" y="73">1</text>
+        <text x="207" y="73">2</text>
+        <text x="269" y="73">7</text>
+      </g>
+      <path d="M0 44L62 88" stroke="rgba(255,255,255,.22)" stroke-width="3"/>
+      <path d="M62 0L124 44" stroke="rgba(255,255,255,.22)" stroke-width="3"/>
+    </g>
+
+    <text x="118" y="405" fill="rgba(255,255,255,.72)" font-family="Verdana, sans-serif" font-size="16" font-weight="700" letter-spacing="3">ONLINE MASA OYUNU</text>
+    <text x="118" y="448" fill="#fff7ea" font-family="Georgia, serif" font-size="48" font-weight="700">KAKURO</text>
+  </g>
+</svg>

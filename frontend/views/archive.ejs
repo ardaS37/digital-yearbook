@@ -1,0 +1,61 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Arşiv</h1>
+  <p class="subtle">Geçmiş okul yılları ve arşivlenmiş sınıflar burada görüntülenir.</p>
+</section>
+
+<% if (!yearCards.length) { %>
+  <section class="card">
+    <div class="empty-state">
+      <h3>Henüz arşiv yok</h3>
+      <p>Yeni yıl geçişi yapıldığında arşiv burada oluşur.</p>
+    </div>
+  </section>
+<% } else { %>
+  <% yearCards.forEach(function(year) { %>
+    <section class="card">
+      <h2><%= year.label %></h2>
+      <p class="subtle">Arşivlenme: <%= year.archived_at || year.created_at %></p>
+      <p class="compact-top"><a class="btn small" href="/archive/<%= year.id %>">Bu Yıllığı Gez</a></p>
+      <% if (!year.classes.length) { %>
+        <div class="empty-state compact-top">
+          <h3>Bu yıl için sınıf kaydı yok</h3>
+          <p>Arşiv yılı var ama sınıf verisi henüz oluşturulmamış.</p>
+        </div>
+      <% } else { %>
+        <div class="stack-list compact-top">
+          <% year.classes.forEach(function(item) { %>
+            <div class="notice">
+              <strong><%= item.branch %></strong>
+              <p class="subtle">Tema: <%= item.theme_color || '-' %></p>
+              <% if (item.cover_photo_path) { %>
+                <p class="compact-top"><img src="<%= item.cover_photo_path %>" alt="<%= item.branch %> kapak görseli" class="class-cover-preview" loading="lazy" /></p>
+              <% } %>
+              <% if (item.class_slogan) { %>
+                <p><%= item.class_slogan %></p>
+              <% } %>
+              <% if (!item.students.length) { %>
+                <div class="empty-state compact-top">
+                  <h3>Bu sınıfta öğrenci kaydı yok</h3>
+                  <p>Arşivde bu sınıfa bağlı öğrenci görünmüyor.</p>
+                </div>
+              <% } else { %>
+                <div class="profile-grid compact-top">
+                  <% item.students.forEach(function(student) { %>
+                    <a href="/archive/<%= year.id %>/profiles/<%= student.id %>" class="profile-card">
+                      <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" loading="lazy" />
+                      <h3><%= student.name %></h3>
+                      <p><strong>No:</strong> <%= student.student_number || '-' %></p>
+                      <p><strong>Slogan:</strong> <%= student.slogan || 'Henüz slogan yok.' %></p>
+                    </a>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  <% }) %>
+<% } %>
+<%- include('partials/footer') %>

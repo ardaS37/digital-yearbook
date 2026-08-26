@@ -1,0 +1,327 @@
+:root {
+  --ink: #162018;
+  --paper: #f3ead7;
+  --panel: rgba(255, 248, 229, 0.88);
+  --green: #0f6b42;
+  --green-dark: #09412b;
+  --gold: #d9a441;
+  --red: #b74b37;
+  --shadow: 0 20px 60px rgba(9, 32, 20, 0.22);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(217, 164, 65, 0.38), transparent 28%),
+    radial-gradient(circle at 82% 8%, rgba(15, 107, 66, 0.28), transparent 28%),
+    linear-gradient(135deg, #f8efd8 0%, #d7c39b 100%);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: #26382d;
+  color: #fff9e8;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(22, 32, 24, 0.18);
+}
+
+button:hover { transform: translateY(-1px); }
+button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+button.primary { background: linear-gradient(135deg, var(--green), var(--green-dark)); }
+button.wide { width: 100%; margin-top: 14px; }
+button.mini {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+input,
+select {
+  width: 130px;
+  border: 2px solid rgba(15, 107, 66, 0.28);
+  border-radius: 999px;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+input {
+  text-transform: uppercase;
+}
+
+select {
+  width: 190px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.shell {
+  width: min(1180px, calc(100vw - 28px));
+  margin: 0 auto;
+  padding: 24px 0 44px;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 24px;
+  border: 2px solid rgba(15, 107, 66, 0.18);
+  border-radius: 28px;
+  background: rgba(255, 248, 229, 0.66);
+  box-shadow: var(--shadow);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 0.92;
+  color: var(--green-dark);
+}
+
+.hero p { margin: 8px 0 0; font-size: 1.05rem; }
+.eyebrow,
+.label {
+  margin: 0;
+  color: #7b5b1d;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ghost-link {
+  flex: 0 0 auto;
+  color: var(--green-dark);
+  font-weight: 900;
+}
+
+.panel {
+  border: 2px solid rgba(15, 107, 66, 0.18);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.mode-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 16px;
+}
+
+.mode-actions,
+.join-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.open-rooms {
+  min-width: min(100%, 260px);
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(15, 107, 66, 0.08);
+}
+
+.open-rooms-head,
+.open-room-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.open-rooms-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.92rem;
+}
+
+.open-room-row {
+  padding: 9px 10px;
+  border: 1px solid rgba(15, 107, 66, 0.15);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.open-room-row button {
+  min-height: 34px;
+  padding: 7px 11px;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(340px, 1fr) 250px;
+  gap: 18px;
+  align-items: start;
+}
+
+.status-panel,
+.rules-panel {
+  padding: 20px;
+}
+
+.status-panel h2,
+.rules-panel h2 {
+  margin: 2px 0 16px;
+  color: var(--green-dark);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(15, 107, 66, 0.09);
+}
+
+.score-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.disc {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.28), inset 0 -4px 8px rgba(0, 0, 0, 0.24);
+}
+
+.disc.black { background: #121612; }
+.disc.white { background: #f8f1dd; border: 1px solid rgba(0, 0, 0, 0.16); }
+
+.turn-card,
+.room-info,
+.message {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(217, 164, 65, 0.16);
+}
+
+.message.error { background: rgba(183, 75, 55, 0.16); color: #8d2b1b; }
+.message.success { background: rgba(15, 107, 66, 0.14); color: var(--green-dark); }
+
+.board-wrap {
+  padding: clamp(10px, 2vw, 18px);
+  border-radius: 28px;
+  background: linear-gradient(135deg, #855f2b, #3b2414);
+  box-shadow: var(--shadow);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  aspect-ratio: 1;
+  padding: 8px;
+  border-radius: 20px;
+  background: #071f15;
+}
+
+.cell {
+  position: relative;
+  border: 1px solid rgba(248, 241, 221, 0.16);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f7a4b, #095b39);
+  cursor: pointer;
+}
+
+.cell.valid::after {
+  content: '';
+  position: absolute;
+  inset: 34%;
+  border-radius: 999px;
+  background: rgba(255, 236, 161, 0.72);
+  box-shadow: 0 0 0 4px rgba(255, 236, 161, 0.16);
+}
+
+.piece {
+  position: absolute;
+  inset: 10%;
+  border-radius: 999px;
+  box-shadow: inset 0 5px 8px rgba(255, 255, 255, 0.24), inset 0 -8px 13px rgba(0, 0, 0, 0.34), 0 8px 12px rgba(0, 0, 0, 0.22);
+}
+
+.piece.B { background: #111713; }
+.piece.W { background: #f8f1dd; }
+
+@media (max-width: 900px) {
+  .mode-panel,
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rules-panel {
+    order: 3;
+  }
+}
+
+@media (max-width: 520px) {
+  .shell {
+    width: min(100vw - 16px, 1180px);
+    padding-top: 8px;
+  }
+
+  .hero,
+  .mode-panel,
+  .status-panel,
+  .rules-panel {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .mode-actions,
+  .join-form,
+  .open-rooms-list {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  input,
+  button {
+    width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .board {
+    gap: 3px;
+    padding: 5px;
+    border-radius: 15px;
+  }
+
+  .cell {
+    border-radius: 8px;
+  }
+}

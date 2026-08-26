@@ -1,0 +1,34 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Sınıflar</h1>
+  <p class="subtle">Kapak sayfalarını inceleyin, sınıf başkanını görün ve sınıf hikayesini keşfedin.</p>
+  <div class="class-showcase-grid compact-top <%= allowedClasses.length >= 5 ? 'five-up' : '' %>" style="--class-count: <%= Math.min(allowedClasses.length, 5) %>;">
+    <% allowedClasses.forEach(function(branch) { %>
+      <% const found = classStats.find((row) => row.class_branch === branch); %>
+      <a href="/classes/<%= branch %>" class="class-showcase-card" style="--class-theme: <%= (found && found.theme_color) || '#0d6e6e' %>;">
+        <div class="class-showcase-media">
+          <% if (found && found.cover_photo_path) { %>
+            <img src="<%= found.cover_photo_path %>" alt="<%= branch %> kapak fotoğrafı" loading="lazy" />
+          <% } else { %>
+            <div class="class-showcase-fallback"><span><%= branch %></span></div>
+          <% } %>
+        </div>
+        <div class="class-showcase-body">
+          <div class="class-showcase-top">
+            <strong><%= branch %></strong>
+            <span><%= found ? found.total : 0 %> öğrenci</span>
+          </div>
+          <p><%= found && found.class_slogan ? found.class_slogan : 'Bu sınıf için henüz kapak sloganı eklenmedi.' %></p>
+          <div class="class-president-line">
+            <% if (found && found.president_name) { %>
+              <span>Sınıf başkanı: <%= found.president_name %></span>
+            <% } else { %>
+              <span>Sınıf başkanı henüz seçilmedi.</span>
+            <% } %>
+          </div>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/footer') %>

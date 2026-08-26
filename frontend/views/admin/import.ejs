@@ -1,0 +1,162 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Excel İçe Aktarma</h1>
+  <p>Öğrenci dosya formatı: <strong>Ad Soyad | Öğrenci Numarası | Sınıf Şubesi</strong></p>
+  <p>Öğretmen dosya formatı: <strong>Ad Soyad</strong></p>
+  <p class="subtle">Excel önce önizlenir. Sadece geçerli ve çakışmayan satırlar onaydan sonra oluşturulur. Erişim kodu yalnızca sonuç ekranında görünür.</p>
+  <p class="compact-top">
+    <a class="btn small alt" href="/admin/users/export-importable.xlsx">Mevcut Kullanıcı Listesini Excel’e Aktar</a>
+  </p>
+
+  <div class="grid two">
+    <form method="post" action="/admin/import/students?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form">
+      <h3>Öğrenci İçe Aktar</h3>
+      <label>Okul</label>
+      <select name="school_id" required>
+        <option value="">Okul seç</option>
+        <% schools.forEach(function(school) { %>
+          <option value="<%= school.id %>"><%= school.name %></option>
+        <% }) %>
+      </select>
+      <input type="file" name="excel" accept=".xlsx,.xls" required />
+      <button type="submit" class="btn">Öğrencileri Önizle</button>
+    </form>
+
+    <form method="post" action="/admin/import/teachers?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form">
+      <h3>Öğretmen İçe Aktar</h3>
+      <label>Okul</label>
+      <select name="school_id" required>
+        <option value="">Okul seç</option>
+        <% schools.forEach(function(school) { %>
+          <option value="<%= school.id %>"><%= school.name %></option>
+        <% }) %>
+      </select>
+      <input type="file" name="excel" accept=".xlsx,.xls" required />
+      <button type="submit" class="btn">Öğretmenleri Önizle</button>
+    </form>
+  </div>
+</section>
+
+<% if (previewResult) { %>
+  <section class="card">
+    <h2>Import Önizleme</h2>
+    <div class="grid four compact-top">
+      <div class="tile"><strong><%= previewResult.totalRows %></strong><span>Okunan Satır</span></div>
+      <div class="tile"><strong><%= previewResult.validRows.length %></strong><span>Oluşturulacak</span></div>
+      <div class="tile"><strong><%= previewResult.conflictRows.length %></strong><span>Çakışan</span></div>
+      <div class="tile"><strong><%= previewResult.errorRows.length %></strong><span>Hatalı</span></div>
+    </div>
+
+    <% if (previewResult.validRows.length) { %>
+      <div class="inline-actions compact-top">
+        <form method="post" action="/admin/import/confirm" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <input type="hidden" name="preview_payload" value="<%= previewResult.payload %>" />
+          <button type="submit" class="btn">Geçerli Satırları Oluştur</button>
+        </form>
+        <form method="post" action="/admin/import/preview-report.csv" class="inline-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <input type="hidden" name="preview_payload" value="<%= previewResult.payload %>" />
+          <input type="hidden" name="conflict_rows" value="<%= JSON.stringify(previewResult.conflictRows) %>" />
+          <input type="hidden" name="error_rows" value="<%= JSON.stringify(previewResult.errorRows) %>" />
+          <button type="submit" class="btn alt">Önizleme Raporu CSV</button>
+        </form>
+      </div>
+    <% } else { %>
+      <p class="subtle compact-top">Oluşturulacak geçerli satır yok.</p>
+      <form method="post" action="/admin/import/preview-report.csv" class="inline-form compact-top">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input type="hidden" name="preview_payload" value="<%= previewResult.payload %>" />
+        <input type="hidden" name="conflict_rows" value="<%= JSON.stringify(previewResult.conflictRows) %>" />
+        <input type="hidden" name="error_rows" value="<%= JSON.stringify(previewResult.errorRows) %>" />
+        <button type="submit" class="btn alt">Önizleme Raporu CSV</button>
+      </form>
+    <% } %>
+
+    <% if (previewResult.validRows.length) { %>
+      <h3 class="compact-top">Oluşturulacak Satırlar</h3>
+      <table>
+        <thead>
+          <tr><th>Satır</th><th>Ad</th><th>Rol</th><th>Öğrenci No</th><th>Sınıf</th></tr>
+        </thead>
+        <tbody>
+          <% previewResult.validRows.forEach(function(row) { %>
+            <tr>
+              <td><%= row.rowNumber %></td>
+              <td><%= row.name %></td>
+              <td><%= row.role === 'student' ? 'Öğrenci' : 'Öğretmen' %></td>
+              <td><%= row.student_number || '-' %></td>
+              <td><%= row.class_branch || '-' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+
+    <% if (previewResult.conflictRows.length) { %>
+      <h3 class="compact-top">Atlanacak Çakışmalar</h3>
+      <table>
+        <thead>
+          <tr><th>Satır</th><th>Ad</th><th>Öğrenci No</th><th>Sınıf</th><th>Neden</th></tr>
+        </thead>
+        <tbody>
+          <% previewResult.conflictRows.forEach(function(row) { %>
+            <tr>
+              <td><%= row.rowNumber %></td>
+              <td><%= row.name || '-' %></td>
+              <td><%= row.student_number || '-' %></td>
+              <td><%= row.class_branch || '-' %></td>
+              <td><%= row.reason %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+
+    <% if (previewResult.errorRows.length) { %>
+      <h3 class="compact-top">Hatalı Satırlar</h3>
+      <table>
+        <thead>
+          <tr><th>Satır</th><th>Ham Değerler</th><th>Hata</th></tr>
+        </thead>
+        <tbody>
+          <% previewResult.errorRows.forEach(function(row) { %>
+            <tr>
+              <td><%= row.rowNumber %></td>
+              <td><%= row.values.join(' | ') %></td>
+              <td><%= row.reason %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% } %>
+
+<section class="card">
+  <h2>Aktarılan Hesaplar</h2>
+  <% if (!importedUsers.length) { %>
+    <p>Henüz içe aktarma sonucu yok.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr><th>Ad</th><th>Rol</th><th>Giriş Kimliği</th><th>Öğrenci No</th><th>Sınıf</th><th>Erişim Kodu</th></tr>
+      </thead>
+      <tbody>
+        <% importedUsers.forEach(function(user) { %>
+          <tr>
+            <td><%= user.name %></td>
+            <td>
+              <% if (user.role === 'student') { %>Öğrenci<% } else if (user.role === 'teacher') { %>Öğretmen<% } else if (user.role === 'guest') { %>Misafir<% } else { %>Yönetici<% } %>
+            </td>
+            <td><strong><%= user.login_identifier || '-' %></strong></td>
+            <td><%= user.student_number || '-' %></td>
+            <td><%= user.class_branch || '-' %></td>
+            <td><strong><%= user.accessCode %></strong></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

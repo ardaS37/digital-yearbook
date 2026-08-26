@@ -1,0 +1,18 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow">
+  <h1><% if (isInactive) { %>Hesap Pasif<% } else if (isExpired) { %>Oturum Kapandı<% } else { %>Çıkış Yapıldı<% } %></h1>
+  <% if (isInactive) { %>
+    <p>Bu hesap şu anda pasif durumda.</p>
+    <p class="subtle">Devam etmek için yönetici ile iletişime geçin.</p>
+  <% } else if (isExpired) { %>
+    <p>Güvenlik nedeniyle oturum süreniz sona erdi.</p>
+    <p class="subtle">Devam etmek için lütfen tekrar giriş yapın.</p>
+  <% } else { %>
+    <p>Oturumunuz başarıyla kapatıldı.</p>
+    <p class="subtle">Tekrar giriş yapmak isterseniz aşağıdaki butonu kullanabilirsiniz.</p>
+  <% } %>
+  <p class="compact-top">
+    <a href="/login" class="btn"><%= isExpired ? 'Tekrar Giriş Yap' : 'Giriş Sayfasına Git' %></a>
+  </p>
+</section>
+<%- include('partials/footer') %>

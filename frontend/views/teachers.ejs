@@ -1,0 +1,62 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<% if (featureFlags.teacher_farewells !== false) { %><section class="card">
+  <h1>Öğretmenler</h1>
+  <p><a href="/print/teachers" target="_blank" rel="noopener noreferrer">Yazdırılabilir görünüm</a></p>
+  <% if (!teachers.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Öğretmen bulunamadı</h3>
+      <p>Bu okulda henüz öğretmen profili görünmüyor.</p>
+    </div>
+  <% } else { %>
+    <div class="profile-grid">
+      <% teachers.forEach(function(teacher) { %>
+        <a href="/profiles/<%= teacher.id %>" class="profile-card">
+          <img src="<%= teacher.photo_path || '/public/default-avatar.svg' %>" alt="<%= teacher.name %>" loading="lazy" />
+          <h3><%= teacher.name %></h3>
+          <p><%= teacher.teacher_category_label %></p>
+          <% if (currentUser.role === 'admin') { %>
+            <p class="subtle"><%= teacher.has_photo ? 'Foto var' : 'Foto yok' %> / <%= teacher.has_slogan ? 'Slogan var' : 'Slogan yok' %></p>
+          <% } %>
+        </a>
+      <% }); %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<section class="card">
+  <h2>Öğretmenler İçin Veda Köşesi</h2>
+  <p class="subtle">Bu bölümde öğretmenler kendi veda mesajlarını yayınlar.</p>
+  <% if (currentUser.role === 'teacher') { %>
+    <form method="post" action="/teachers/farewells" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <textarea name="body" maxlength="800" placeholder="Kendi veda mesajınızı yazın" required></textarea>
+      <button type="submit" class="btn">Veda Mesajını Yayınla</button>
+    </form>
+  <% } else { %>
+    <p class="status compact-top">Veda mesajlarını yalnızca öğretmenler yazabilir.</p>
+  <% } %>
+  <% if (!farewellMessages.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz veda mesajı yok</h3>
+      <p>İlk veda mesajını bir öğretmen yayınlayabilir.</p>
+    </div>
+  <% } else { %>
+    <div class="stack-list compact-top">
+      <% farewellMessages.forEach(function(item) { %>
+        <div class="notice">
+          <strong><%= item.teacher_name %></strong>
+          <p class="subtle"><%= item.teacher_category_label %></p>
+          <p><%= item.body %></p>
+          <p class="subtle"><%= item.author_name %> - <%= item.created_at %></p>
+          <% if (currentUser.role === 'admin' || currentUser.id === item.author_user_id) { %>
+            <form method="post" action="/teachers/farewells/<%= item.id %>/delete" class="inline-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="link-button danger">Mesajı Sil</button>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

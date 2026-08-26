@@ -1,0 +1,559 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce, pageThemeColor }) %>
+<% if (pageThemeColor && pageThemeAltColor) { %>
+  <style nonce="<%= cspNonce %>">
+    .profile-theme-scope {
+      --profile-accent: <%= pageThemeColor %>;
+      --profile-accent-alt: <%= pageThemeAltColor %>;
+      --profile-button: <%= pageThemeButtonColor || pageThemeColor %>;
+      --profile-button-alt: <%= pageThemeButtonAltColor || pageThemeAltColor %>;
+      --profile-button-text: <%= pageThemeButtonTextColor || '#ffffff' %>;
+      --profile-button-alt-text: <%= pageThemeButtonAltTextColor || '#ffffff' %>;
+    }
+  </style>
+<% } %>
+
+<div class="profile-theme-scope">
+<%
+  const fixedContactItems = [
+    { label: 'Telefon', value: profile.contact_phone, href: profile.contact_phone ? `tel:${profile.contact_phone}` : '' },
+    { label: 'E-posta', value: profile.contact_email, href: profile.contact_email ? `mailto:${profile.contact_email}` : '' },
+    { label: 'Instagram', value: profile.contact_instagram, href: profile.contact_instagram ? `https://instagram.com/${String(profile.contact_instagram).replace(/^@/, '')}` : '' },
+    { label: 'X', value: profile.contact_x, href: profile.contact_x ? `https://x.com/${String(profile.contact_x).replace(/^@/, '')}` : '' },
+    { label: 'Facebook', value: profile.contact_facebook, href: profile.contact_facebook || '' },
+    { label: 'LinkedIn', value: profile.contact_linkedin, href: profile.contact_linkedin || '' }
+  ].filter(function(item) { return item.value; });
+  const contactItems = fixedContactItems.concat(customContactItems || []);
+  const roleLabel = profile.role === 'student' ? 'Öğrenci' : profile.role === 'teacher' ? 'Öğretmen' : profile.role === 'guest' ? 'Misafir' : profile.role === 'other' ? 'Diğer' : 'Yönetici';
+  const completionPercent = profileCompletion ? Math.max(0, Math.min(100, Number(profileCompletion.percent || 0))) : 0;
+  const canViewProfileCompletion = isOwnProfile || currentUser.role === 'admin' || canSendManagerInboxMessage;
+  const isProfilePhotoLocked = profile.photo_locked === true || Number(profile.photo_locked) === 1;
+  const isProfileCoverLocked = profile.profile_cover_locked === true || Number(profile.profile_cover_locked) === 1;
+  function formatShortDateTime(value) {
+    if (!value) return '';
+    const text = String(value);
+    const match = text.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (match) return `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]}`;
+    return text.replace('T', ' ').replace(/\.\d+.*/, '').replace(/:\d{2}$/, '');
+  }
+%>
+<section class="card profile-cover-card" <% if (pageThemeColor) { %>style="border-top: 8px solid <%= pageThemeColor %>;"<% } %>>
+  <% if (profile.status === 'archived') { %>
+    <div class="flash compact-top">Bu profil arşiv yıllığına ait ve salt okunur modda görüntüleniyor.</div>
+  <% } %>
+  <div class="profile-cover-media">
+    <% if (profile.profile_cover_path) { %>
+      <img src="<%= profile.profile_cover_path %>" alt="<%= profile.name %> kapak görseli" loading="lazy" />
+    <% } else { %>
+      <div class="profile-cover-fallback">
+        <span><%= profile.role === 'teacher' ? 'Öğretmen' : 'Profil' %></span>
+      </div>
+    <% } %>
+  </div>
+  <div class="profile-head profile-head-overlay">
+    <img class="profile-photo" src="<%= profile.photo_path || '/public/default-avatar.svg' %>" alt="<%= profile.name %>" loading="lazy" />
+    <div class="profile-hero-content">
+      <div class="profile-title-row">
+        <div>
+          <span class="profile-eyebrow"><%= roleLabel %> Profili</span>
+          <h1><%= displayName %><% if (isOptedOut) { %> <span class="profile-badge" style="background:var(--danger,#c00);color:#fff;font-size:0.7em;vertical-align:middle;">Katılmayacak</span><% } %></h1>
+          <% if (isOptedOut && !isOwnProfile && currentUser.role !== 'admin') { %><p class="subtle">Bu kullanıcı yıllığa katılmayacak.</p><% } %>
+        </div>
+        <% if (!isOwnProfile && currentUser.role !== 'guest') { %>
+          <form method="post" action="/profiles/<%= profile.id %>/like" class="inline-form profile-like-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="btn small profile-like-button <%= likedByCurrentUser ? 'alt' : '' %>"><%= likedByCurrentUser ? 'Beğeniyi Kaldır' : 'Profili Beğen' %></button>
+          </form>
+        <% } %>
+      </div>
+
+      <div class="profile-badge-row">
+        <span class="profile-badge"><%= roleLabel %></span>
+        <% if (profile.class_branch) { %><span class="profile-badge">Sınıf: <%= profile.class_branch %></span><% } %>
+        <% if (profile.student_number) { %><span class="profile-badge">No: <%= profile.student_number %></span><% } %>
+        <% if (profile.birth_date) { %><span class="profile-badge">Doğum günü: <%= profile.birth_date %></span><% } %>
+      </div>
+
+      <div class="profile-hero-grid">
+        <div class="profile-slogan-card">
+          <span>Slogan</span>
+          <strong><%= profile.slogan || 'Henüz slogan yok.' %></strong>
+        </div>
+        <div class="profile-stat-card">
+          <span>Beğeni</span>
+          <strong><%= profileLikeCount %></strong>
+        </div>
+        <% if (featureFlags.view_counts !== false) { %>
+          <div class="profile-stat-card">
+            <span>Özgün ziyaretçi</span>
+            <strong><%= profile.profile_visit_count || 0 %></strong>
+          </div>
+        <% } %>
+        <div class="profile-stat-card">
+          <span>Son güncelleme</span>
+          <strong><%= formatShortDateTime(profile.updated_at || profile.created_at) %></strong>
+        </div>
+      </div>
+
+      <% if (canViewProfileCompletion) { %>
+        <div class="profile-completion-card">
+          <div>
+            <span>Profil tamamlanma</span>
+            <strong><%= completionPercent %>%</strong>
+          </div>
+          <div class="profile-completion-track" aria-label="Profil tamamlanma oranı">
+            <span style="width: <%= completionPercent %>%;"></span>
+          </div>
+          <% if (profileCompletion && profileCompletion.missing && profileCompletion.missing.length && isOwnProfile) { %>
+            <p class="subtle">Eksik: <%= profileCompletion.missing.slice(0, 4).join(', ') %><%= profileCompletion.missing.length > 4 ? '...' : '' %></p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (canEditOwnProfile) { %>
+        <p class="profile-theme-preview"><strong>Profil Teması:</strong> <input type="color" value="<%= profile.profile_theme_color || '#0d6e6e' %>" disabled /> <span class="subtle"><%= profile.profile_theme_color || '#0d6e6e' %></span></p>
+      <% } %>
+      <% if (profile.favorite_quote) { %>
+        <p class="profile-quote-line">"<%= profile.favorite_quote %>"</p>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<nav class="section-jump profile-jump">
+  <a href="#ozet">Özet</a>
+  <% if (contactItems.length) { %><a href="#iletisim">İletişim</a><% } %>
+  <% if (canEditOwnProfile && featureFlags.profile_inbox !== false) { %><a href="#gelen-kutusu">Gelen Kutusu</a><% } %>
+  <% if (canEditOwnProfile) { %><a href="#duzenle">Düzenle</a><% } %>
+  <% if (!isOwnProfile || threeWords.length) { %><a href="#uc-kelime">3 Kelime</a><% } %>
+  <a href="#yorumlar">Yıllık Mesajları</a>
+</nav>
+
+<% if (canEditOwnProfile && featureFlags.profile_inbox !== false) { %>
+  <section class="card" id="gelen-kutusu">
+    <h2>Gelen Kutusu</h2>
+    <% if (!inboxNotifications.length) { %>
+      <div class="empty-state">
+        <h3>Yeni bildirim yok</h3>
+        <p>Profiline gelen etkileşimler burada görünecek.</p>
+      </div>
+    <% } else { %>
+      <form method="post" action="/profiles/me/inbox/clear" class="inline-form compact-top">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button type="submit" class="btn alt small">Gelen Kutusunu Temizle</button>
+      </form>
+      <div class="stack-list compact-top">
+        <% inboxNotifications.forEach(function(item) { %>
+          <article class="notice">
+            <strong><%= item.title %></strong>
+            <p><%= item.body %></p>
+            <p class="subtle"><%= item.actor_name || 'Sistem' %> - <%= item.created_at %></p>
+            <% if (item.link_path) { %>
+              <p class="compact-top"><a href="<%= item.link_path %>">İlgili yere git</a></p>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+<% } %>
+
+<% if (canSendManagerInboxMessage) { %>
+  <section class="card">
+    <h2>Gelen Kutusuna Mesaj Gönder</h2>
+    <p class="subtle">Bu mesaj doğrudan kullanıcının gelen kutusunda görünür. İşlem denetim kaydına yazılır.</p>
+    <form method="post" action="/profiles/<%= profile.id %>/inbox-message" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="manager-inbox-title">Başlık</label>
+      <input id="manager-inbox-title" name="title" maxlength="120" value="Yönetimden mesaj" />
+      <label for="manager-inbox-body">Mesaj</label>
+      <textarea id="manager-inbox-body" name="body" maxlength="1000" required placeholder="Kullanıcının gelen kutusuna düşecek mesajı yaz"></textarea>
+      <button type="submit" class="btn">Gelen Kutusuna Gönder</button>
+    </form>
+  </section>
+<% } %>
+
+<% if (featureFlags.profile_featured_message !== false && featuredMessage) { %>
+  <section class="card">
+    <h2>Öne Çıkan Mesaj</h2>
+    <div class="message-card featured-message-card">
+      <img class="message-author-photo" src="<%= featuredMessage.sender_photo_path || '/public/default-avatar.svg' %>" alt="<%= featuredMessage.sender_name %>" loading="lazy" />
+      <div class="message-card-content">
+        <a href="/profiles/<%= featuredMessage.sender_id %>"><%= featuredMessage.sender_name %></a>
+        <div><%= featuredMessage.message %></div>
+        <small><%= featuredMessage.updated_at || featuredMessage.created_at %></small>
+      </div>
+    </div>
+    <% if (isOwnProfile || currentUser.role === 'admin') { %>
+      <form method="post" action="/profiles/<%= profile.id %>/messages/feature/clear" class="inline-form compact-top">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <button type="submit" class="link-button danger">Öne Çıkanı Kaldır</button>
+      </form>
+    <% } %>
+  </section>
+<% } %>
+
+<section class="card profile-tabs-card" id="ozet" <% if (pageThemeColor) { %>style="border-left: 6px solid <%= pageThemeColor %>;"<% } %>>
+  <div class="tabs-nav">
+    <button type="button" class="tab-button is-active" data-tab-target="summary">Özet</button>
+    <button type="button" class="tab-button" data-tab-target="memory">Anı</button>
+  </div>
+
+  <div class="tab-panel is-active" data-tab-panel="summary">
+    <div class="empty-state subtle-card">
+      <h2>Kısa Biyografi</h2>
+      <p><%= profile.bio || 'Bu profil için henüz kısa bir biyografi eklenmedi.' %></p>
+    </div>
+    <% if (profile.free_text) { %>
+      <div class="empty-state subtle-card compact-top">
+        <h2>Serbest Yazı Alanı</h2>
+        <p class="profile-free-text"><%= profile.free_text %></p>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="tab-panel" data-tab-panel="memory">
+    <div class="empty-state subtle-card">
+      <h2>En Sevdiği Anı</h2>
+      <p><%= profile.favorite_memory || 'Henüz bir anı paylaşılmadı.' %></p>
+    </div>
+  </div>
+</section>
+
+<% if (!isOwnProfile || threeWords.length) { %>
+<section class="card" id="uc-kelime">
+  <h2><%= isOwnProfile ? '3 Kelime Yorumları' : 'Bu Kişiyi 3 Kelimeyle Anlat' %></h2>
+  <% if (!threeWords.length) { %>
+    <p class="status">Henüz kimse 3 kelimelik bir yorum bırakmadı.</p>
+  <% } else { %>
+    <div class="tag-cloud compact-top">
+      <% threeWords.forEach(function(item) { %>
+        <span class="chip"><%= item.words %> - <%= item.author_name %></span>
+      <% }) %>
+    </div>
+  <% } %>
+  <% if (isOwnProfile) { %>
+    <p class="subtle compact-top">Bu alanı yalnızca başka kullanıcılar doldurabilir.</p>
+  <% } else if (isGuestReadonly) { %>
+    <p class="status compact-top">Misafir profili yalnızca görüntüleme yapabilir.</p>
+  <% } else if (isTeacherThreeWordsDisabled) { %>
+    <p class="status">Öğretmenlere 3 kelime yazısı şu anda kapalı.</p>
+  <% } else { %>
+    <form method="post" action="/profiles/<%= profile.id %>/three-words" class="stack-form profile-action-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input name="words" maxlength="80" placeholder="ör. neşeli, güvenilir, enerjik" value="<%= myThreeWords ? myThreeWords.words : '' %>" required />
+      <button type="submit" class="btn profile-action-button">3 Kelimeyi Kaydet</button>
+    </form>
+  <% } %>
+</section>
+<% } %>
+
+<% if (contactItems.length) { %>
+  <section class="card" id="iletisim">
+    <h2>İletişim</h2>
+    <div class="tag-cloud compact-top">
+      <% contactItems.forEach(function(item) { %>
+        <span class="chip">
+          <strong><%= item.label %>:</strong>
+          <% if (item.href) { %>
+            <a href="<%= item.href %>" target="_blank" rel="noopener noreferrer"><%= item.value %></a>
+          <% } else { %>
+            <%= item.value %>
+          <% } %>
+        </span>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (canEditOwnProfile) { %>
+  <section class="card profile-edit-card" id="duzenle">
+    <h2>Profilimi Düzenle</h2>
+    <form method="post" action="/profiles/me/slogan" class="stack-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="slogan">Slogan</label>
+      <input id="slogan" name="slogan" maxlength="2000" value="<%= profile.slogan || '' %>" />
+      <label for="bio">Kısa Biyografi</label>
+      <textarea id="bio" name="bio" maxlength="1500" placeholder="Kendini kısaca anlat"><%= profile.bio || '' %></textarea>
+      <label for="free_text">Serbest Yazı Alanı</label>
+      <textarea id="free_text" name="free_text" maxlength="4000" rows="8" placeholder="Profilinde görünmesini istediğin serbest yazını buraya yaz"><%= profile.free_text || '' %></textarea>
+      <label for="favorite_memory">En Sevdiğin Anı</label>
+      <textarea id="favorite_memory" name="favorite_memory" maxlength="500" placeholder="Kısa bir anı"><%= profile.favorite_memory || '' %></textarea>
+      <label for="favorite_quote">Sevdiğin Alıntı</label>
+      <textarea id="favorite_quote" name="favorite_quote" maxlength="300" placeholder="Sevdiğin kısa bir alıntı"><%= profile.favorite_quote || '' %></textarea>
+      <label for="birth_date">Doğum Günü</label>
+      <input id="birth_date" type="date" name="birth_date" value="<%= profile.birth_date || '' %>" />
+      <label for="profile_theme_color">Profil Tema Rengi</label>
+      <input id="profile_theme_color" type="color" name="profile_theme_color" value="<%= profile.profile_theme_color || pageThemeColor || '#0d6e6e' %>" />
+      <h3>İletişim</h3>
+      <p class="subtle">Boş bıraktığın alanlar profilinde hiç görünmez.</p>
+      <label for="contact_phone">Telefon</label>
+      <input id="contact_phone" name="contact_phone" maxlength="40" value="<%= profile.contact_phone || '' %>" placeholder="+90..." />
+      <label for="contact_email">E-posta</label>
+      <input id="contact_email" type="email" name="contact_email" maxlength="120" value="<%= profile.contact_email || '' %>" placeholder="contact@example.edu" />
+      <label for="contact_instagram">Instagram</label>
+      <input id="contact_instagram" name="contact_instagram" maxlength="120" value="<%= profile.contact_instagram || '' %>" placeholder="@kullaniciadi" />
+      <label for="contact_x">X</label>
+      <input id="contact_x" name="contact_x" maxlength="120" value="<%= profile.contact_x || '' %>" placeholder="@kullaniciadi" />
+      <label for="contact_facebook">Facebook</label>
+      <input id="contact_facebook" name="contact_facebook" maxlength="120" value="<%= profile.contact_facebook || '' %>" placeholder="Profil linki veya kullanıcı adı" />
+      <label for="contact_linkedin">LinkedIn</label>
+      <input id="contact_linkedin" name="contact_linkedin" maxlength="120" value="<%= profile.contact_linkedin || '' %>" placeholder="Profil linki veya kullanıcı adı" />
+      <div class="custom-contacts-editor">
+        <div class="custom-contacts-header">
+          <h4>Özel İletişim Satırları</h4>
+          <button id="add-custom-contact" type="button" class="btn small alt">Satır Ekle</button>
+        </div>
+        <p class="subtle">Birden fazla mail, farklı sosyal medya veya kendi istediğin iletişim bilgisini ekleyebilirsin.</p>
+        <div id="custom-contacts-list" class="custom-contacts-list"></div>
+        <input id="custom_contacts_json" type="hidden" name="custom_contacts_json" value="<%= customContactsJson %>" />
+      </div>
+      <button type="submit" class="btn">Profili Kaydet</button>
+    </form>
+
+    <% if (profilePhotoEditMode === 'admin_only') { %>
+      <p class="status compact-top">Profil fotoğrafı ve kapak görseli şu anda yalnızca yönetici tarafından güncellenebilir.</p>
+    <% } else { %>
+      <% if (isProfilePhotoLocked) { %>
+        <p class="status compact-top">Profil fotoğrafın yönetici tarafından sabitlendi, değiştirilemez.</p>
+      <% } else { %>
+        <form method="post" action="/profiles/me/photo?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+          <label for="photo">Profil Fotoğrafı</label>
+          <input id="photo" type="file" name="photo" accept="image/*" required />
+          <button type="submit" class="btn">Fotoğraf Yükle</button>
+        </form>
+        <% if (profile.photo_path) { %>
+          <form method="post" action="/profiles/me/photo/delete" class="inline-form compact-top">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="link-button danger">Profil Fotoğrafını Kaldır</button>
+          </form>
+        <% } %>
+      <% } %>
+
+      <% if (isProfileCoverLocked) { %>
+        <p class="status compact-top">Profil kapağın yönetici tarafından kilitlendi, değiştirilemez.</p>
+      <% } else { %>
+        <form method="post" action="/profiles/me/cover?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+          <label for="cover_photo">Profil Kapağı / Arka Plan Görseli</label>
+          <input id="cover_photo" type="file" name="cover_photo" accept="image/*" required />
+          <button type="submit" class="btn alt">Kapak Görseli Yükle</button>
+        </form>
+        <% if (profile.profile_cover_path) { %>
+          <form method="post" action="/profiles/me/cover/delete" class="inline-form compact-top">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+            <button type="submit" class="link-button danger">Kapak Görselini Kaldır</button>
+          </form>
+        <% } %>
+      <% } %>
+    <% } %>
+  </section>
+<% } else if (isOwnProfile && isGuestReadonly) { %>
+  <section class="card">
+    <h2>Profilim</h2>
+    <p class="status">Misafir profili yalnızca görüntüleme yapabilir.</p>
+  </section>
+<% } %>
+
+
+<% if (canToggleOptOut) { %>
+  <section class="card">
+    <h2>Yıllık Katılımı</h2>
+    <% if (isOptedOut) { %>
+      <p class="subtle">Şu anda yıllığa <strong>katılmıyorsunuz</strong>. Adınız gizleniyor ve kimse size mesaj yazamıyor. İstediğiniz zaman tekrar katılabilirsiniz.</p>
+    <% } else { %>
+      <p class="subtle">Yıllığa katılmak istemiyorsanız aşağıdan katılımınızı kapatabilirsiniz. Adınız gizlenecek ve kimse size mesaj yazamayacak.</p>
+    <% } %>
+    <form method="post" action="/profiles/me/toggle-opt-out" class="inline-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button type="submit" class="btn <%= isOptedOut ? '' : 'alt' %>" onclick="return confirm('<%= isOptedOut ? 'Yıllığa tekrar katılmak istediğinize emin misiniz?' : 'Yıllık katılımınızı kapatmak istediğinize emin misiniz? Adınız gizlenecek ve kimse size mesaj yazamayacak.' %>")">
+        <%= isOptedOut ? 'Yıllığa Tekrar Katıl' : 'Yıllığa Katılmayacak Olarak İşaretle' %>
+      </button>
+    </form>
+  </section>
+<% } %>
+
+<% if (isOwnProfile && currentUser.role !== 'admin' && featureFlags.self_account_delete !== false) { %>
+  <section class="card danger-zone">
+    <h2>Hesabımı Sil</h2>
+    <p class="subtle">Bu işlem geri alınamaz. Profiliniz, mesajlarınız ve ilişkili içerikleriniz kalıcı olarak silinebilir.</p>
+    <form method="post" action="/profiles/me/delete-account" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="delete-account-access-code">Erişim kodunu doğrula</label>
+      <input id="delete-account-access-code" type="password" name="access_code" maxlength="100" required placeholder="Erişim kodunuz" />
+      <button type="submit" class="link-button danger">Hesabımı Kalıcı Olarak Sil</button>
+    </form>
+  </section>
+<% } %>
+<script nonce="<%= cspNonce %>">
+  (function () {
+    var list = document.getElementById('custom-contacts-list');
+    var addButton = document.getElementById('add-custom-contact');
+    var hidden = document.getElementById('custom_contacts_json');
+    if (!list || !addButton || !hidden) return;
+    var contacts = <%- customContactsJson || '[]' %>;
+    function sync() {
+      hidden.value = JSON.stringify(contacts.map(function (item) {
+        return {
+          label: String(item.label || '').slice(0, 40),
+          value: String(item.value || '').slice(0, 160),
+          href: String(item.href || '').slice(0, 160)
+        };
+      }).filter(function (item) { return item.label || item.value || item.href; }).slice(0, 12));
+    }
+    function render() {
+      list.innerHTML = '';
+      contacts.forEach(function (item, index) {
+        var row = document.createElement('div');
+        row.className = 'custom-contact-row';
+        row.innerHTML =
+          '<input aria-label="Başlık" maxlength="40" placeholder="Örnek: 2. mail, GitHub, forum siteleri..." />' +
+          '<input aria-label="Değer" maxlength="160" placeholder="Kullanıcı adı, mail veya telefon" />' +
+          '<input aria-label="Link" maxlength="160" placeholder="Opsiyonel link" />' +
+          '<button type="button" class="link-button danger">Sil</button>';
+        var inputs = row.querySelectorAll('input');
+        inputs[0].value = item.label || '';
+        inputs[1].value = item.value || '';
+        inputs[2].value = item.href || '';
+        inputs.forEach(function (input, inputIndex) {
+          input.addEventListener('input', function () {
+            var key = inputIndex === 0 ? 'label' : inputIndex === 1 ? 'value' : 'href';
+            contacts[index][key] = input.value;
+            sync();
+          });
+        });
+        row.querySelector('button').addEventListener('click', function () {
+          contacts.splice(index, 1);
+          sync();
+          render();
+        });
+        list.appendChild(row);
+      });
+      sync();
+    }
+    addButton.addEventListener('click', function () {
+      if (contacts.length >= 12) return;
+      contacts.push({ label: '', value: '', href: '' });
+      render();
+    });
+    render();
+  })();
+</script>
+
+<section class="card" id="yorumlar">
+  <h2>Yıllık Mesajları</h2>
+  <% if (!canEditOwnProfile) { %>
+    <div class="message-write-card subtle-card">
+      <div class="message-write-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <h3>Yıllık Mesajı Yaz</h3>
+      </div>
+      <% if (canWriteMessage) { %>
+        <form method="post" action="/profiles/<%= profile.id %>/message" class="stack-form compact-top profile-action-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <textarea name="message" maxlength="2000" required placeholder="<%= profile.name %> için yıllık mesajını buraya yaz… (en fazla 2000 karakter)" class="message-textarea"><%= draftMessage ? draftMessage.draft_text : '' %></textarea>
+          <div class="inline-actions profile-action-buttons">
+            <button type="submit" class="btn profile-action-button">Mesaj Gönder</button>
+            <button type="submit" class="btn alt profile-action-button" formaction="/profiles/<%= profile.id %>/message/draft">Taslak Olarak Kaydet</button>
+          </div>
+        </form>
+        <% if (draftMessage) { %><p class="subtle compact-top">Son taslak güncellemesi: <%= draftMessage.updated_at %></p><% } %>
+      <% } else if (isTeacherMessageDisabled) { %>
+        <p class="status compact-top">Öğretmenlere yıllık yazısı şu anda kapalı.</p>
+      <% } else if (isTeacherToTeacher) { %>
+        <p class="status compact-top">Öğretmenler birbirine yorum yazamaz.</p>
+      <% } else if (pendingMessage) { %>
+        <p class="notice compact-top">Mesajınız onay bekliyor. Onaylandıktan sonra burada yayınlanacak.</p>
+      <% } else if (messageApproval && messageApproval.status === 'rejected') { %>
+        <p class="status compact-top">Son gönderdiğiniz mesaj reddedildi. İsterseniz yeni bir mesaj yazabilirsiniz.</p>
+      <% } else if (messageAlreadySent) { %>
+        <% if (messageApproval && messageApproval.status === 'approved') { %>
+          <p class="notice compact-top">Mesajınız onaylandı ve yayınlandı.</p>
+        <% } else { %>
+          <p class="status compact-top">Mesaj yayınlandı, düzenleyebilirsin.</p>
+        <% } %>
+        <form method="post" action="/profiles/<%= profile.id %>/message/edit" class="stack-form compact-top profile-action-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+          <textarea name="message" maxlength="2000" required><%= existingMessage ? existingMessage.message : '' %></textarea>
+          <button type="submit" class="btn profile-action-button">Mesajı Güncelle</button>
+        </form>
+      <% } else if (isOptedOut && !isOwnProfile) { %>
+        <p class="status compact-top">Bu kullanıcı yıllığa katılmayacağı için mesaj yazılamaz.</p>
+      <% } else if (isGuestReadonly) { %>
+        <p class="status compact-top">Misafir profili yalnızca görüntüleme yapabilir.</p>
+      <% } else { %>
+        <p class="status compact-top">Kendinize mesaj gönderemezsiniz.</p>
+      <% } %>
+    </div>
+  <% } %>
+  <% if (!messages.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz mesaj yok</h3>
+      <p>İlk yıllık mesajını bu profil için sen bırakabilirsin.</p>
+    </div>
+  <% } else { %>
+    <ul class="message-list compact-top">
+      <% messages.forEach(function(item) { %>
+        <li class="message-card">
+          <img
+            class="message-author-photo"
+            src="<%= item.sender_photo_path || '/public/default-avatar.svg' %>"
+            alt="<%= item.sender_name %>"
+            loading="lazy"
+          />
+          <div class="message-card-content">
+            <a href="/profiles/<%= item.sender_id %>"><%= item.sender_name %></a>
+            <div><%= item.message %></div>
+            <small><%= item.created_at %></small>
+            <% if (Number(currentUser.id) !== Number(item.sender_id) && currentUser.role !== 'guest' && !item.flagged_by_current_user) { %>
+              <form action="/profiles/<%= profile.id %>/messages/<%= item.id %>/flag" method="post" class="stack-form compact-top">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <input name="reason" maxlength="400" placeholder="Mesajı neden bildiriyorsunuz?" required />
+                <button type="submit" class="link-button">Mesajı Bildir</button>
+              </form>
+            <% } else if (item.flagged_by_current_user) { %>
+              <p class="subtle">Bu mesaj için moderasyon bildirimi gönderdiniz.</p>
+            <% } %>
+            <% if (currentUser.role === 'admin') { %>
+              <a class="link-button danger" href="/admin/confirm?action=delete-message&target_id=<%= item.id %>&back_to=<%= encodeURIComponent('/profiles/' + profile.id) %>">Mesajı Sil</a>
+            <% } %>
+            <% if (featureFlags.profile_featured_message !== false && (isOwnProfile || currentUser.role === 'admin')) { %>
+              <form method="post" action="/profiles/<%= profile.id %>/messages/<%= item.id %>/feature" class="inline-form compact-top">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button"><%= featuredMessage && featuredMessage.id === item.id ? 'Öne Çıkan Mesaj' : 'Öne Çıkar' %></button>
+              </form>
+            <% } %>
+            <% if (isOwnProfile) { %>
+              <form method="post" action="/profiles/<%= profile.id %>/messages/<%= item.id %>/toggle-priority" class="inline-form compact-top">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button" title="Export önceliği — tikli mesajlar yıllık çıktısında önce gösterilir"><%= item.is_export_priority ? '★ Öncelikli (export)' : '☆ Öncelik ver (export)' %></button>
+              </form>
+            <% } %>
+            <% if (canDeleteReceivedMessages) { %>
+              <form method="post" action="/profiles/<%= profile.id %>/messages/<%= item.id %>/delete-received" class="inline-form compact-top">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button danger" onclick="return confirm('Bu mesajı profilinizden silmek istediğinize emin misiniz?')">Mesajı Sil</button>
+              </form>
+            <% } %>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<% if (featureFlags.user_reports !== false && !isOwnProfile && currentUser.role !== 'guest') { %>
+  <section class="card">
+    <h2>Kullanıcı Bildirimi</h2>
+    <% if (userReport) { %>
+      <p class="subtle">Bu kullanıcı için moderasyon bildirimi gönderdiniz.</p>
+    <% } else { %>
+      <form action="/profiles/<%= profile.id %>/report" method="post" class="stack-form compact-top">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <input name="reason" maxlength="400" placeholder="Kullanıcıyı neden bildiriyorsunuz?" required />
+        <button type="submit" class="link-button">Kullanıcıyı Bildir</button>
+      </form>
+    <% } %>
+  </section>
+<% } %>
+
+ </div>
+<%- include('partials/footer') %>

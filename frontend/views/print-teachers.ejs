@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/public/css/styles.css" />
+  </head>
+  <body class="print-page">
+    <main class="container main-content">
+      <section class="card">
+        <h1>Öğretmenler Yazdırma Görünümü</h1>
+        <div class="profile-grid">
+          <% teachers.forEach(function(teacher) { %>
+            <div class="profile-card">
+              <img src="<%= teacher.photo_path || '/public/default-avatar.svg' %>" alt="<%= teacher.name %>" />
+              <h3><%= teacher.name %></h3>
+              <p><%= teacher.teacher_category_label %></p>
+              <p><%= teacher.slogan || 'Henüz slogan yok.' %></p>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    </main>
+    <script nonce="<%= cspNonce %>">window.print();</script>
+  </body>
+</html>

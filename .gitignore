@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment and credentials
+.env
+.env.*
+!.env.example
+
+# Runtime data: never commit real people, schools, messages, or media
+database/
+backups/
+uploads/
+logs/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sql.bak
+*.log
+
+# Generated exports and local media collections
+docs/offline-export/
+frontend/public/audio/
+midi/
+sf/
+
+# Tests, coverage, and build output
+coverage/
+.nyc_output/
+dist/
+build/
+tmp/
+temp/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
+*.suo
+*.user

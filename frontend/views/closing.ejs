@@ -1,0 +1,18 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="hero card">
+  <div class="hero-content">
+    <p class="eyebrow">Yıl Sonu</p>
+    <h1><%= closingTitle || 'Bir dönemin sonu' %></h1>
+    <p><%= closingBody || 'Bu sayfa mezuniyet ve kapanış için ayrıldı.' %></p>
+    <% if (graduationDate) { %>
+      <p class="hero-countdown">Mezuniyet Tarihi: <strong><%= graduationDate %></strong></p>
+    <% } %>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Kapanış Notu</h2>
+  <p>Burada o yıla ait kapanış metni, son sözler ve yıl sonu vurgusu yer alır.</p>
+  <p><a href="/">Ana sayfaya dön</a></p>
+</section>
+<%- include('partials/footer') %>

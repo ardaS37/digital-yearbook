@@ -1,0 +1,110 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>İçerik Onay Paneli</h1>
+  <p class="subtle">
+    İçerik onayı <strong><%= contentApprovalEnabled ? 'açık' : 'kapalı' %></strong>.
+    <% if (currentUser.role === 'admin') { %><a href="/admin">Ayarları aç</a><% } %>
+  </p>
+  <p class="subtle compact-top">
+    Onay paneline adminler ile müdür, müdür yardımcısı ve baş müdür yardımcısı kategorisindeki öğretmenler erişebilir.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Bekleyen İçerikler</h2>
+  <% if (!pendingRequests.length) { %>
+    <p>Bekleyen içerik yok.</p>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Tür</th>
+          <th>Gönderen</th>
+          <th>Hedef</th>
+          <th>İçerik</th>
+          <th>Tarih</th>
+          <th>İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% pendingRequests.forEach(function(item) { %>
+          <tr>
+            <td><%= item.label %></td>
+            <td><%= item.actor_name %></td>
+            <td>
+              <% if (item.target_user_id) { %>
+                <a href="/profiles/<%= item.target_user_id %>"><%= item.target_name || 'Profil' %></a>
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+            <td>
+              <% if (item.item_type === 'profile_message' || item.item_type === 'profile_message_edit') { %>
+                <%= item.payload.message || '' %>
+              <% } else if (item.item_type === 'profile_details') { %>
+                <p><strong>Slogan:</strong> <%= item.payload.slogan || '-' %></p>
+                <p><strong>Biyografi:</strong> <%= item.payload.bio || '-' %></p>
+                <p><strong>Serbest Yazı:</strong> <%= item.payload.freeText || '-' %></p>
+                <p><strong>Anı:</strong> <%= item.payload.favoriteMemory || '-' %></p>
+                <p><strong>Alıntı:</strong> <%= item.payload.favoriteQuote || '-' %></p>
+                <p><strong>İletişim:</strong>
+                  <%= [
+                    item.payload.contactPhone,
+                    item.payload.contactEmail,
+                    item.payload.contactInstagram,
+                    item.payload.contactX,
+                    item.payload.contactFacebook,
+                    item.payload.contactLinkedin,
+                    item.payload.contactNsocial
+                  ].filter(Boolean).join(' / ') || '-' %>
+                </p>
+                <p><strong>Özel İletişim:</strong>
+                  <%= (function () {
+                    try {
+                      return JSON.parse(item.payload.customContactsJson || '[]')
+                        .map(function(contact) { return [contact.label, contact.value].filter(Boolean).join(': '); })
+                        .filter(Boolean)
+                        .join(' / ') || '-';
+                    } catch (error) {
+                      return '-';
+                    }
+                  })() %>
+                </p>
+              <% } else if (item.item_type === 'profile_three_words') { %>
+                <%= item.payload.words || '' %>
+              <% } else if (item.item_type === 'gallery_upload') { %>
+                <p><strong>Fotoğraf:</strong> <%= item.payload.files ? item.payload.files.length : 0 %> adet</p>
+                <p><strong>Açıklama:</strong> <%= item.payload.caption || '-' %></p>
+                <% if (item.payload.files && item.payload.files.length) { %>
+                  <div class="profile-grid compact-top">
+                    <% item.payload.files.slice(0, 6).forEach(function(file) { %>
+                      <img src="<%= file.photoPath %>" alt="Onay bekleyen galeri fotoğrafı" loading="lazy" class="profile-photo" />
+                    <% }) %>
+                  </div>
+                <% } %>
+              <% } else if (item.item_type === 'anonymous_board_post') { %>
+                <%= item.payload.body || '' %>
+              <% } else if (item.item_type === 'profile_guestbook' || item.item_type === 'teacher_farewell' || item.item_type === 'gallery_photo_comment' || item.item_type === 'gallery_collage_comment') { %>
+                <%= item.payload.body || '' %>
+              <% } else { %>
+                <%= item.payload_json %>
+              <% } %>
+            </td>
+            <td><%= item.created_at %></td>
+            <td>
+              <form action="/admin/content-approvals/<%= item.id %>/approve" method="post" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button">Onayla</button>
+              </form>
+              <form action="/admin/content-approvals/<%= item.id %>/reject" method="post" class="inline-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                <button type="submit" class="link-button danger">Reddet</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+<%- include('../partials/footer') %>

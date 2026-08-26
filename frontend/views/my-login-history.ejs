@@ -1,0 +1,372 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Ayarlar</h1>
+  <p class="compact-top"><a href="/" class="btn small alt">Ana Sayfaya Dön</a></p>
+
+  <h2 class="compact-top">Görünüm</h2>
+  <p class="subtle">Bu tercihler sadece bu cihazda geçerlidir.</p>
+
+  <div class="setting-row">
+    <div>
+      <strong>Her Girişte Rastgele Renk</strong>
+      <p class="subtle">Kapalıyken kendi rengini seçebilirsin.</p>
+    </div>
+    <div class="setting-row-controls" id="accent-mode-group">
+      <button class="btn small alt" id="accent-mode-random" type="button">Açık</button>
+      <button class="btn small alt" id="accent-mode-fixed" type="button">Kapalı</button>
+      <button class="btn small alt" id="accent-mode-default" type="button">Varsayılan</button>
+    </div>
+  </div>
+  <div class="setting-row" id="accent-fixed-row" style="display:none">
+    <div>
+      <strong>Renk Seç</strong>
+    </div>
+    <div class="setting-row-controls">
+      <input type="color" id="accent-picker" title="Renk seç" style="width:40px;height:34px;padding:2px;border-radius:8px;border:1px solid var(--line);cursor:pointer;background:var(--surface)" />
+      <button class="btn small alt" id="accent-pick-random" type="button">Şansa Bırak</button>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <strong>Tema</strong>
+    </div>
+    <div class="setting-row-controls" id="theme-btn-group">
+      <button class="btn small alt" data-theme-val="light" type="button">Aydınlık</button>
+      <button class="btn small alt" data-theme-val="dark" type="button">Koyu</button>
+      <button class="btn small alt" data-theme-val="system" type="button">Sistem</button>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <strong>Cam Teması</strong>
+      <p class="subtle">Yönetici açık bırakmışsa geçerlidir.</p>
+    </div>
+    <div class="setting-row-controls" id="glass-btn-group">
+      <button class="btn small alt" data-glass-val="on" type="button">Açık</button>
+      <button class="btn small alt" data-glass-val="off" type="button">Kapalı</button>
+      <button class="btn small alt" data-glass-val="reset" type="button">Varsayılan</button>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div>
+      <strong>Arkaplan Müziği</strong>
+      <p class="subtle">Enstrüman: SF2 soundfont (daha gerçekçi). Osilatör: hafif synth sesi. Chrome önerilir.</p>
+    </div>
+    <div class="setting-row-controls" id="bgm-btn-group">
+      <button class="btn small alt" id="bgm-instrument" type="button">Enstrüman</button>
+      <button class="btn small alt" id="bgm-oscillator" type="button">Osilatör</button>
+      <button class="btn small alt" id="bgm-off" type="button">Kapalı</button>
+    </div>
+  </div>
+
+  <script nonce="<%= cspNonce %>">
+    (function () {
+      /* --- Tema Rengi --- */
+      function hslToHex(h, s, l) {
+        l /= 100; s /= 100;
+        var a = s * Math.min(l, 1 - l);
+        var f = function (n) {
+          var k = (n + h / 30) % 12;
+          var c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+          return Math.round(255 * c).toString(16).padStart(2, '0');
+        };
+        return '#' + f(0) + f(8) + f(4);
+      }
+
+      var picker = document.getElementById('accent-picker');
+      var pickRandomBtn = document.getElementById('accent-pick-random');
+      var modeRandomBtn = document.getElementById('accent-mode-random');
+      var modeFixedBtn = document.getElementById('accent-mode-fixed');
+      var modeDefaultBtn = document.getElementById('accent-mode-default');
+      var fixedRow = document.getElementById('accent-fixed-row');
+
+      /* 'random' | 'fixed' | 'default' */
+      function getMode() {
+        try {
+          var dc = localStorage.getItem('defaultAccentMode');
+          if (dc === 'default') return 'default';
+          return localStorage.getItem('userAccentColor') ? 'fixed' : 'random';
+        } catch(e) { return 'random'; }
+      }
+
+      function applyAccent(color) {
+        document.documentElement.style.setProperty('--accent', color);
+        document.documentElement.style.setProperty('--accent-readable', color);
+        if (picker) picker.value = color;
+      }
+
+      function getCurrentAccent() {
+        return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0d6e6e';
+      }
+
+      function highlightMode(mode) {
+        modeRandomBtn.style.opacity  = mode === 'random'  ? '1' : '0.5';
+        modeRandomBtn.style.fontWeight = mode === 'random'  ? '700' : '400';
+        modeFixedBtn.style.opacity   = mode === 'fixed'   ? '1' : '0.5';
+        modeFixedBtn.style.fontWeight  = mode === 'fixed'   ? '700' : '400';
+        modeDefaultBtn.style.opacity = mode === 'default' ? '1' : '0.5';
+        modeDefaultBtn.style.fontWeight = mode === 'default' ? '700' : '400';
+        fixedRow.style.display = mode === 'fixed' ? '' : 'none';
+      }
+
+      function setRandomMode() {
+        try { localStorage.removeItem('userAccentColor'); sessionStorage.removeItem('sessionAccentColor'); localStorage.removeItem('defaultAccentMode'); } catch(e) {}
+        highlightMode('random');
+        var sc = null;
+        try { sc = sessionStorage.getItem('sessionAccentColor'); } catch(e) {}
+        if (!sc) {
+          sc = hslToHex(Math.floor(Math.random() * 360), 62, 44);
+          try { sessionStorage.setItem('sessionAccentColor', sc); } catch(e) {}
+        }
+        applyAccent(sc);
+      }
+
+      function setFixedMode() {
+        try { localStorage.removeItem('defaultAccentMode'); } catch(e) {}
+        var color = getCurrentAccent();
+        if (!color.match(/^#[0-9a-f]{6}$/i)) color = hslToHex(Math.floor(Math.random() * 360), 62, 44);
+        try { localStorage.setItem('userAccentColor', color); sessionStorage.removeItem('sessionAccentColor'); } catch(e) {}
+        if (picker) picker.value = color;
+        applyAccent(color);
+        highlightMode('fixed');
+      }
+
+      function setDefaultMode() {
+        try { localStorage.removeItem('userAccentColor'); sessionStorage.removeItem('sessionAccentColor'); localStorage.setItem('defaultAccentMode', 'default'); } catch(e) {}
+        highlightMode('default');
+        /* Rengi sıfırla — sayfa yenilenerek sunucu rengi gelsin */
+        document.documentElement.style.removeProperty('--accent');
+        document.documentElement.style.removeProperty('--accent-readable');
+      }
+
+      modeRandomBtn.addEventListener('click', setRandomMode);
+      modeFixedBtn.addEventListener('click', setFixedMode);
+      modeDefaultBtn.addEventListener('click', setDefaultMode);
+
+      picker.addEventListener('input', function () {
+        try { localStorage.setItem('userAccentColor', picker.value); sessionStorage.removeItem('sessionAccentColor'); } catch (e) {}
+        applyAccent(picker.value);
+      });
+
+      pickRandomBtn.addEventListener('click', function () {
+        var color = hslToHex(Math.floor(Math.random() * 360), 62, 44);
+        try { localStorage.setItem('userAccentColor', color); sessionStorage.removeItem('sessionAccentColor'); } catch (e) {}
+        applyAccent(color);
+        if (picker) picker.value = color;
+      });
+
+      /* İlk yükleme */
+      highlightMode(getMode());
+      if (getMode() === 'fixed') picker.value = getCurrentAccent();
+    })();
+  </script>
+
+  <script nonce="<%= cspNonce %>">
+    (function () {
+      var serverGlass = document.body.getAttribute('data-liquid-glass');
+
+      /* --- Tema --- */
+      function getTheme() {
+        try { return localStorage.getItem('themePreference') || 'system'; } catch(e) { return 'system'; }
+      }
+      function setTheme(val) {
+        try { localStorage.setItem('themePreference', val); } catch(e) {}
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var resolved = val === 'system' ? (prefersDark ? 'dark' : 'light') : val;
+        document.documentElement.setAttribute('data-theme-preference', val);
+        document.documentElement.setAttribute('data-theme', resolved);
+        highlightTheme(val);
+      }
+      function highlightTheme(val) {
+        document.querySelectorAll('#theme-btn-group [data-theme-val]').forEach(function(btn) {
+          btn.style.opacity = btn.dataset.themeVal === val ? '1' : '0.5';
+          btn.style.fontWeight = btn.dataset.themeVal === val ? '700' : '400';
+        });
+      }
+      document.querySelectorAll('#theme-btn-group [data-theme-val]').forEach(function(btn) {
+        btn.addEventListener('click', function() { setTheme(btn.dataset.themeVal); });
+      });
+      highlightTheme(getTheme());
+
+      /* --- Cam Efekti --- */
+      function getGlass() {
+        try { return localStorage.getItem('liquidGlassOverride') || 'reset'; } catch(e) { return 'reset'; }
+      }
+      function setGlass(val) {
+        try {
+          if (val === 'reset') { localStorage.removeItem('liquidGlassOverride'); }
+          else { localStorage.setItem('liquidGlassOverride', val); }
+        } catch(e) {}
+        document.body.setAttribute('data-liquid-glass', val === 'reset' ? serverGlass : val);
+        highlightGlass(val);
+      }
+      function highlightGlass(val) {
+        document.querySelectorAll('#glass-btn-group [data-glass-val]').forEach(function(btn) {
+          btn.style.opacity = btn.dataset.glassVal === val ? '1' : '0.5';
+          btn.style.fontWeight = btn.dataset.glassVal === val ? '700' : '400';
+        });
+      }
+      document.querySelectorAll('#glass-btn-group [data-glass-val]').forEach(function(btn) {
+        btn.addEventListener('click', function() { setGlass(btn.dataset.glassVal); });
+      });
+      highlightGlass(getGlass());
+
+      /* --- Arkaplan Müziği --- */
+      function getBgm() {
+        try { return localStorage.getItem('bgmEnabled') || 'off'; } catch(e) { return 'off'; }
+      }
+      function highlightBgm(val) {
+        ['instrument','oscillator','off'].forEach(function(k) {
+          var btn = document.getElementById('bgm-' + k);
+          if (!btn) return;
+          btn.style.opacity = val === k ? '1' : '0.5';
+          btn.style.fontWeight = val === k ? '700' : '400';
+        });
+      }
+      function setBgm(val) {
+        try { localStorage.setItem('bgmEnabled', val); } catch(e) {}
+        highlightBgm(val);
+        if (typeof BGM === 'undefined') return;
+        if (val === 'off') { BGM.stop(); return; }
+        /* Mod değişimi: çalan parçayı durdur, yeniden başlat */
+        var wasPlaying = BGM._playing;
+        BGM.stop();
+        BGM._mode = val;
+        if (!BGM._noteEvents) {
+          var files = <%- JSON.stringify(bgmFiles || []) %>;
+          if (!files.length) return;
+          var f = sessionStorage.getItem('bgmFile');
+          if (!f || files.indexOf(f) === -1) { f = files[Math.floor(Math.random() * files.length)]; sessionStorage.setItem('bgmFile', f); }
+          BGM.load('/public/audio/midi/' + f, function(loaded) { if (loaded) BGM.start(); });
+        } else {
+          BGM.start();
+        }
+      }
+      document.getElementById('bgm-instrument').addEventListener('click', function() { setBgm('instrument'); });
+      document.getElementById('bgm-oscillator').addEventListener('click', function() { setBgm('oscillator'); });
+      document.getElementById('bgm-off').addEventListener('click', function() { setBgm('off'); });
+      highlightBgm(getBgm());
+    })();
+  </script>
+
+  <hr class="compact-top" />
+  <h2>Giriş Geçmişi</h2>
+  <p class="subtle">Son 50 giriş denemesi. Tanımadığınız bir cihaz veya konum görürseniz şifrenizi değiştirin ve yönetime bildirin.</p>
+  <%
+    function fmtLoginDate(val) {
+      if (!val) return '–';
+      var t = String(val);
+      var m = t.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+      if (m) return m[3] + '.' + m[2] + '.' + m[1] + ' ' + m[4] + ':' + m[5];
+      return t.replace('T', ' ').replace(/\.\d+.*/, '').replace(/:\d{2}$/, '');
+    }
+  %>
+  <% if (!attempts.length) { %>
+    <p>Henüz giriş kaydı bulunamadı.</p>
+  <% } else { %>
+    <style nonce="<%= cspNonce %>">
+      #lh-table { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 0.75rem; }
+      .lh-entry { border-bottom: 1px solid var(--line); }
+      .lh-entry:last-child { border-bottom: none; }
+      .lh-entry.lh-warn { background: color-mix(in srgb, orange 7%, transparent); }
+      .lh-entry.lh-err  { background: color-mix(in srgb, crimson 6%, transparent); }
+      .lh-summary {
+        display: flex; align-items: center; gap: 0.5rem; padding: 0.38rem 0.75rem;
+        cursor: pointer; font-size: 0.84rem; user-select: none; list-style: none;
+      }
+      .lh-summary::-webkit-details-marker { display: none; }
+      .lh-badge { display: inline-block; padding: 0 0.45rem; border-radius: 6px; font-size: 0.74rem; font-weight: 700; line-height: 1.7; white-space: nowrap; flex-shrink: 0; }
+      .lh-badge.ok   { background: color-mix(in srgb, green 14%, transparent);   color: green; }
+      .lh-badge.warn { background: color-mix(in srgb, orange 20%, transparent);  color: darkorange; }
+      .lh-badge.err  { background: color-mix(in srgb, crimson 14%, transparent); color: crimson; }
+      .lh-date { color: var(--ink-subtle, #888); white-space: nowrap; flex-shrink: 0; }
+      .lh-short { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-subtle, #888); font-size: 0.8rem; }
+      .lh-ip   { font-family: monospace; font-size: 0.78rem; color: var(--ink-subtle, #888); white-space: nowrap; flex-shrink: 0; }
+      .lh-chevron { font-size: 0.7rem; color: var(--ink-subtle, #888); flex-shrink: 0; transition: transform 0.15s; }
+      details[open] .lh-chevron { transform: rotate(90deg); }
+      .lh-detail { padding: 0.35rem 0.75rem 0.5rem 0.75rem; font-size: 0.82rem; display: flex; flex-wrap: wrap; gap: 0.2rem 1rem; border-top: 1px solid var(--line); }
+      .lh-detail span { color: var(--ink-subtle, #888); }
+      .lh-detail strong { color: var(--ink); }
+      #lh-pagination { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+    </style>
+    <div id="lh-table">
+      <% attempts.forEach(function(item, idx) { %>
+        <%
+          const isSuccess = item.status === 'success' || item.status === 'success_suspicious';
+          const isSuspicious = item.status === 'success_suspicious';
+          const isFailed = item.status === 'failed';
+          const isBlocked = item.status === 'blocked';
+          const statusLabel = isSuccess && !isSuspicious ? 'Başarılı' :
+                              isSuspicious ? 'Şüpheli' :
+                              isFailed ? 'Başarısız' :
+                              isBlocked ? 'Engellendi' : item.status;
+          const badgeCls = isSuccess && !isSuspicious ? 'ok' : isSuspicious ? 'warn' : 'err';
+          const entryCls = isSuspicious ? ' lh-warn' : (isFailed || isBlocked) ? ' lh-err' : '';
+          const deviceIcon = item.device_type === 'mobile' ? '📱' :
+                             item.device_type === 'tablet' ? '📟' : '💻';
+          const browserLabel = [item.browser_name, item.browser_version].filter(Boolean).join(' ') || 'Bilinmiyor';
+          const osLabel = [item.os_name, item.os_version].filter(Boolean).join(' ') || 'Bilinmiyor';
+          const hasExtra = item.device_model || (item.reason && item.reason !== 'login_ok');
+        %>
+        <details class="lh-entry<%= entryCls %>" data-lh-idx="<%= idx %>">
+          <summary class="lh-summary">
+            <span class="lh-chevron">›</span>
+            <span class="lh-badge <%= badgeCls %>"><%= statusLabel %></span>
+            <span class="lh-date"><%= fmtLoginDate(item.created_at) %></span>
+            <span class="lh-short"><%= deviceIcon %> <%= browserLabel %></span>
+            <span class="lh-ip"><%= item.ip_address || '–' %></span>
+          </summary>
+          <div class="lh-detail">
+            <span><span>Tarayıcı</span> <strong><%= browserLabel %></strong></span>
+            <span><span>İşletim Sistemi</span> <strong><%= osLabel %></strong></span>
+            <span><span>IP</span> <strong style="font-family:monospace"><%= item.ip_address || '–' %></strong></span>
+            <% if (item.device_model) { %><span><span>Cihaz</span> <strong><%= item.device_model %></strong></span><% } %>
+            <% if (item.reason && item.reason !== 'login_ok') { %><span><span>Sebep</span> <strong><%= item.reason %></strong></span><% } %>
+          </div>
+        </details>
+      <% }) %>
+    </div>
+    <div id="lh-pagination">
+      <button class="btn small alt" id="lh-prev" type="button">‹ Önceki</button>
+      <span id="lh-page-info" class="subtle" style="font-size:0.85rem"></span>
+      <button class="btn small alt" id="lh-next" type="button">Sonraki ›</button>
+    </div>
+    <script nonce="<%= cspNonce %>">
+      (function () {
+        var PER_PAGE = 30;
+        var rows  = Array.prototype.slice.call(document.querySelectorAll('#lh-table .lh-entry'));
+        var total = rows.length;
+        var pages = Math.ceil(total / PER_PAGE);
+        var page  = 0;
+        var info  = document.getElementById('lh-page-info');
+        var prev  = document.getElementById('lh-prev');
+        var next  = document.getElementById('lh-next');
+        function render() {
+          rows.forEach(function (r, i) {
+            r.style.display = (i >= page * PER_PAGE && i < (page + 1) * PER_PAGE) ? '' : 'none';
+          });
+          info.textContent = (page + 1) + ' / ' + pages + '  (' + total + ' kayıt)';
+          prev.disabled = page === 0;
+          next.disabled = page === pages - 1;
+          if (pages <= 1) document.getElementById('lh-pagination').style.display = 'none';
+        }
+        prev.addEventListener('click', function () { if (page > 0) { page--; render(); } });
+        next.addEventListener('click', function () { if (page < pages - 1) { page++; render(); } });
+        render();
+      })();
+    </script>
+  <% } %>
+
+  <hr style="margin:2rem 0 1.5rem" />
+  <h2>Yasal</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:0.5rem 0.75rem">
+    <a href="/kvkk-aydinlatma-metni" class="btn small alt">KVKK Aydınlatma Metni</a>
+    <a href="/gizlilik-sozlesmesi" class="btn small alt">Gizlilik Sözleşmesi</a>
+    <a href="/acik-riza-metni" class="btn small alt">Açık Rıza Metni</a>
+    <a href="/cookie-policy" class="btn small alt">Çerez Politikası</a>
+  </div>
+</section>
+<%- include('partials/footer') %>

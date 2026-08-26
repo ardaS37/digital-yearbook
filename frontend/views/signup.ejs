@@ -1,0 +1,46 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow auth-card auth-card-signup">
+  <div class="auth-card-header">
+    <p class="eyebrow">Yeni Başvuru</p>
+    <h1>Hesap Oluştur</h1>
+    <p class="subtle">Başvurunuz okul yöneticisine gider. Onaylanınca giriş bilgileriniz okul yönetimi tarafından paylaşılır.</p>
+  </div>
+  <form method="post" action="/signup" class="stack-form auth-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <label for="school_id">Okul</label>
+    <select id="school_id" name="school_id" required>
+      <option value="">Okul seç</option>
+      <% schools.forEach(function(school) { %>
+        <option value="<%= school.id %>"<%= (typeof defaultSchoolId !== 'undefined' && defaultSchoolId && school.id === defaultSchoolId) ? ' selected' : '' %>><%= school.name %></option>
+      <% }) %>
+    </select>
+
+    <label for="role">Hesap Türü</label>
+    <select id="role" name="role" required>
+      <option value="student">Öğrenci</option>
+      <option value="teacher">Öğretmen</option>
+      <option value="other">Diğer</option>
+    </select>
+
+    <label for="name">Ad Soyad</label>
+    <input id="name" name="name" maxlength="120" required />
+
+    <label for="student_number">Öğrenci Numarası</label>
+    <input id="student_number" name="student_number" maxlength="50" />
+
+    <label for="class_branch">Sınıf</label>
+    <select id="class_branch" name="class_branch">
+      <option value="">Yok</option>
+      <% classes.forEach(function(branch) { %>
+        <option value="<%= branch %>"><%= branch %></option>
+      <% }) %>
+    </select>
+
+    <label for="note">Not</label>
+    <textarea id="note" name="note" maxlength="500" placeholder="Gerekirse açıklama yazın"></textarea>
+
+    <button type="submit" class="btn">Başvuru Gönder</button>
+  </form>
+</section>
+<%- include('partials/footer') %>

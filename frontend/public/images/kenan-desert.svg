@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="kenan-desert-title kenan-desert-desc">
+  <title id="kenan-desert-title">KENAN oyun kartı</title>
+  <desc id="kenan-desert-desc">KENAN için ortak temada oyun kartı görseli.</desc>
+  <defs>
+    <linearGradient id="kenan-desert-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22456f"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="kenan-desert-panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,255,255,.18)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,.06)"/>
+    </linearGradient>
+    <filter id="kenan-desert-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#081018" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" fill="url(#kenan-desert-bg)"/>
+  <circle cx="132" cy="92" r="118" fill="#fed7aa" opacity=".22"/>
+  <circle cx="830" cy="434" r="154" fill="#ffffff" opacity=".08"/>
+  <g filter="url(#kenan-desert-shadow)">
+    <rect x="56" y="42" width="848" height="456" rx="34" fill="rgba(14,20,26,.18)"/>
+    <rect x="74" y="60" width="812" height="420" rx="28" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.16)"/>
+    <rect x="104" y="100" width="752" height="254" rx="26" fill="rgba(7,10,14,.18)" stroke="rgba(255,255,255,.12)"/>
+    
+    
+    <rect x="244" y="122" width="472" height="212" rx="26" fill="rgba(20,26,34,.22)"/>
+    <rect x="264" y="142" width="432" height="172" rx="18" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.16)"/>
+  
+    <rect x="288" y="150" width="384" height="156" rx="20" fill="rgba(255,181,89,.28)"/>
+    <circle cx="620" cy="178" r="44" fill="#ffd36e"/>
+    <path d="M304 272c112-70 212-82 300-28 84 52 144 56 228 10v52H288z" fill="#9e5b2e"/>
+    <path d="M288 294c130-48 254-42 364 10 84 40 154 42 220 0v30H288z" fill="#e7a64f"/>
+    <path d="M710 196c-6-28 8-56 34-78-2 36-12 62-34 78z" fill="#263025"/>
+    <path d="M722 204c26-16 55-15 85 2-30 14-58 13-85-2z" fill="#263025"/>
+    <rect x="712" y="196" width="12" height="86" rx="6" fill="#263025"/>
+    <text x="118" y="405" fill="rgba(255,255,255,.72)" font-family="Verdana, sans-serif" font-size="16" font-weight="700" letter-spacing="3">SUNUCU OYUNU</text>
+    <text x="118" y="448" fill="#fff7ea" font-family="Georgia, serif" font-size="48" font-weight="700">KENAN</text>
+  </g>
+</svg>

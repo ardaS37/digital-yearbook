@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="koridor-title koridor-desc">
+  <title id="koridor-title">KORIDOR oyun kartı</title>
+  <desc id="koridor-desc">KORIDOR için ortak temada oyun kartı görseli.</desc>
+  <defs>
+    <linearGradient id="koridor-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c3b55"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="koridor-panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,255,255,.18)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,.06)"/>
+    </linearGradient>
+    <filter id="koridor-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#081018" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" fill="url(#koridor-bg)"/>
+  <circle cx="132" cy="92" r="118" fill="#bae6fd" opacity=".22"/>
+  <circle cx="830" cy="434" r="154" fill="#ffffff" opacity=".08"/>
+  <g filter="url(#koridor-shadow)">
+    <rect x="56" y="42" width="848" height="456" rx="34" fill="rgba(14,20,26,.18)"/>
+    <rect x="74" y="60" width="812" height="420" rx="28" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.16)"/>
+    <rect x="104" y="100" width="752" height="254" rx="26" fill="rgba(7,10,14,.18)" stroke="rgba(255,255,255,.12)"/>
+    
+    
+    <rect x="244" y="122" width="472" height="212" rx="26" fill="rgba(20,26,34,.22)"/>
+    <rect x="264" y="142" width="432" height="172" rx="18" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.16)"/>
+  
+    <g stroke="rgba(255,255,255,.16)" stroke-width="2">
+      <path d="M340 170h280"/><path d="M340 186h280"/><path d="M340 202h280"/><path d="M340 218h280"/><path d="M340 234h280"/><path d="M340 250h280"/><path d="M340 266h280"/><path d="M340 282h280"/><path d="M340 298h280"/>
+      <path d="M340 170v128" transform="translate(0 0)"/><path d="M340 170v128" transform="translate(35 0)"/><path d="M340 170v128" transform="translate(70 0)"/><path d="M340 170v128" transform="translate(105 0)"/><path d="M340 170v128" transform="translate(140 0)"/><path d="M340 170v128" transform="translate(175 0)"/><path d="M340 170v128" transform="translate(210 0)"/><path d="M340 170v128" transform="translate(245 0)"/><path d="M340 170v128" transform="translate(280 0)"/>
+    </g>
+    <circle cx="408" cy="282" r="18" fill="#fef3c7"/>
+    <circle cx="552" cy="186" r="18" fill="#38bdf8"/>
+    <rect x="474" y="202" width="16" height="74" rx="8" fill="#f97316"/>
+    <rect x="420" y="232" width="74" height="16" rx="8" fill="#f97316"/>
+    <text x="118" y="405" fill="rgba(255,255,255,.72)" font-family="Verdana, sans-serif" font-size="16" font-weight="700" letter-spacing="3">ONLINE MASA OYUNU</text>
+    <text x="118" y="448" fill="#fff7ea" font-family="Georgia, serif" font-size="48" font-weight="700">KORIDOR</text>
+  </g>
+</svg>

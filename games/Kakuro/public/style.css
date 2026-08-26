@@ -1,0 +1,234 @@
+:root {
+  --bg-1: #16364d;
+  --bg-2: #255168;
+  --panel: rgba(247, 242, 232, 0.96);
+  --line: rgba(24, 49, 67, 0.14);
+  --text: #18354b;
+  --muted: #607487;
+  --cell: #fbf5e8;
+  --cell-active: #f5cf87;
+  --cell-conflict: #f5b3ad;
+  --block: #243746;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(255, 214, 124, 0.16), transparent 24%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2));
+}
+
+.shell {
+  width: min(1200px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 24px 0 40px;
+}
+
+.hero, .control-panel, .board-card, .pad-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 26px;
+  box-shadow: 0 20px 48px rgba(0,0,0,0.18);
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 26px 30px;
+}
+
+.eyebrow, .label {
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.76rem;
+  color: #9a6921;
+  font-weight: 800;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(3rem, 8vw, 5rem);
+  line-height: 0.95;
+  color: #19466a;
+}
+
+.ghost-link {
+  color: #2b5a84;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.control-panel {
+  margin-top: 18px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 240px;
+  gap: 14px;
+  align-items: end;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+select, button { font: inherit; }
+
+select {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 16px;
+  border: 2px solid rgba(24, 70, 106, 0.18);
+  padding: 0 14px;
+  background: rgba(255,255,255,0.94);
+  color: var(--text);
+}
+
+button {
+  border: 0;
+  border-radius: 16px;
+  min-height: 44px;
+  padding: 0 16px;
+  cursor: pointer;
+  font-weight: 800;
+  color: #fff8ef;
+  background: linear-gradient(135deg, #315f85, #23445f);
+}
+
+button.primary {
+  color: #4f2b00;
+  background: linear-gradient(135deg, #f7ca73, #de9f3b);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stats > div {
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255,255,255,0.72);
+}
+
+.stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+  margin-bottom: 8px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 620px) 260px;
+  gap: 18px;
+  margin-top: 18px;
+  justify-content: center;
+}
+
+.board-card, .pad-card { padding: 18px; }
+
+.board {
+  display: grid;
+  gap: 2px;
+  background: #20384a;
+  padding: 8px;
+  border-radius: 20px;
+}
+
+.cell {
+  aspect-ratio: 1 / 1;
+  border: 0;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  position: relative;
+}
+
+.cell.block {
+  background: var(--block);
+}
+
+.cell.clue {
+  background:
+    linear-gradient(135deg, transparent 49%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.18) 51%, transparent 52%),
+    var(--block);
+}
+
+.cell.clue .down,
+.cell.clue .right {
+  position: absolute;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #f6e7c4;
+}
+
+.cell.clue .down { top: 6px; right: 8px; }
+.cell.clue .right { bottom: 6px; left: 8px; }
+
+.cell.input {
+  background: var(--cell);
+  color: var(--text);
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 800;
+}
+
+.cell.input.active {
+  background: var(--cell-active);
+}
+
+.cell.input.conflict {
+  background: var(--cell-conflict);
+}
+
+.number-pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pad-btn {
+  min-height: 64px;
+  font-size: 1.2rem;
+}
+
+.hint-text {
+  color: var(--muted);
+  margin-top: 16px;
+}
+
+@media (max-width: 1000px) {
+  .control-panel,
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100% - 16px, 100%);
+    padding-top: 12px;
+  }
+
+  .hero {
+    padding: 18px;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,0 +1,204 @@
+:root {
+  --ink: #f6edd6;
+  --muted: rgba(246, 237, 214, 0.75);
+  --panel: rgba(35, 22, 15, 0.9);
+  --panel-soft: rgba(255,255,255,.06);
+  --line: rgba(245, 158, 11, 0.2);
+  --accent: #f59e0b;
+  --accent-dark: #b45309;
+  --board: #cf9b48;
+  --board-light: #e2b766;
+  --grid: rgba(65, 36, 15, 0.78);
+  --shadow: 0 28px 80px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 16%, rgba(245,158,11,.16), transparent 22%),
+    radial-gradient(circle at 84% 8%, rgba(120,53,15,.16), transparent 24%),
+    linear-gradient(180deg, #120d09 0%, #24160f 100%);
+}
+button, input, select { font: inherit; }
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #2d1808;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  box-shadow: 0 10px 24px rgba(180, 83, 9, 0.24);
+}
+button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+button.primary { background: linear-gradient(135deg, #ffefbf, var(--accent)); }
+button.mini { min-height: 34px; padding: 6px 12px; font-size: .88rem; }
+button.active { box-shadow: inset 0 0 0 2px rgba(255,255,255,.48), 0 10px 24px rgba(180,83,9,.24); }
+input, select {
+  width: 170px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: var(--ink);
+  background: rgba(0,0,0,.24);
+}
+select { appearance: auto; }
+select option { color: #16110b; background: #fff8ea; }
+input::placeholder { color: rgba(246,237,214,.5); }
+.shell { width: min(1240px, calc(100vw - 28px)); margin: 0 auto; padding: 24px 0 44px; }
+.hero, .panel {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px;
+  margin-bottom: 18px;
+}
+.eyebrow, .label {
+  margin: 0;
+  color: var(--accent);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  font-size: .78rem;
+  font-weight: 900;
+}
+.hero h1 {
+  margin: 0;
+  line-height: .92;
+  font-size: clamp(2.6rem, 6vw, 5.2rem);
+  color: #fff0d0;
+}
+.hero p { margin: 10px 0 0; color: var(--muted); }
+.ghost-link { color: #fff0d0; font-weight: 900; text-decoration: none; }
+.mode-panel {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+.mode-actions, .join-form, .tool-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.open-rooms {
+  flex: 1;
+  min-width: 280px;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--panel-soft);
+}
+.open-rooms-head, .open-room-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.open-rooms-list { display: grid; gap: 8px; margin-top: 10px; }
+.open-room-row { padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.08); }
+.game-layout { display: grid; grid-template-columns: 260px minmax(420px, 1fr) 250px; gap: 18px; align-items: start; }
+.status-panel, .rules-panel { padding: 20px; }
+.turn-card, .room-info, .message {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+}
+.message.error { background: rgba(180,64,44,.24); }
+.message.success { background: rgba(16,185,129,.18); }
+.board-wrap {
+  padding: 18px;
+  border-radius: 30px;
+  background: linear-gradient(180deg, #a66f28 0%, #7a4e1e 100%);
+  box-shadow: var(--shadow);
+}
+.tool-row { margin-bottom: 14px; }
+.go-board {
+  display: grid;
+  gap: 0;
+  width: var(--board-width, min(86vw, 860px));
+  aspect-ratio: 1;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, var(--board-light), var(--board));
+  box-shadow: inset 0 0 0 1px rgba(77, 42, 14, 0.22);
+}
+.go-point {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  aspect-ratio: 1;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+.go-point::before,
+.go-point::after {
+  content: '';
+  position: absolute;
+  background: var(--grid);
+}
+.go-point::before { width: 2px; height: 100%; }
+.go-point::after { width: 100%; height: 2px; }
+.go-point.star .hoshi {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(59, 32, 12, 0.82);
+  position: relative;
+  z-index: 2;
+}
+.go-point.valid { background: radial-gradient(circle, rgba(255,255,255,.18) 0, rgba(255,255,255,0) 58%); }
+.go-point.valid:hover { background: radial-gradient(circle, rgba(255,255,255,.26) 0, rgba(255,255,255,0) 60%); }
+.stone {
+  position: relative;
+  z-index: 3;
+  width: var(--stone-size, clamp(24px, 88%, 40px));
+  aspect-ratio: 1;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 6px 9px rgba(255,255,255,.22),
+    inset 0 -10px 14px rgba(0,0,0,.34),
+    0 10px 18px rgba(0,0,0,.24);
+}
+.stone.x {
+  background: radial-gradient(circle at 34% 28%, #fffef8 0%, #f4ead8 44%, #cdbb9d 100%);
+  border: 1px solid rgba(120, 92, 58, 0.22);
+}
+.stone.o {
+  background: radial-gradient(circle at 34% 28%, #645446 0%, #231811 38%, #050403 100%);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.rules-panel p { color: var(--muted); }
+@media (max-width: 980px) {
+  .hero, .mode-panel { flex-direction: column; align-items: stretch; }
+  .game-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .shell { width: min(100vw - 18px, 100%); }
+  .board-wrap { padding: 12px; }
+  .tool-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tool-row select,
+  .tool-row button { width: 100%; }
+  .go-board {
+    width: min(100%, 94vw);
+    padding: 12px;
+    border-radius: 18px;
+  }
+  .stone {
+    width: var(--stone-size, clamp(18px, 90%, 30px));
+  }
+}
+@media (max-width: 520px) {
+  .go-board { padding: 8px; }
+  .go-point::before { width: 1.5px; }
+  .go-point::after { height: 1.5px; }
+  .go-point.star .hoshi { width: 6px; height: 6px; }
+}

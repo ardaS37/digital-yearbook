@@ -1,0 +1,56 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Mantar Pano</h1>
+  <p class="subtle">
+    Buraya yazılan notlar mantar panoda isimsiz görünür. Sistem güvenliği için notu kimin gönderdiği denetim kaydında saklanır.
+    <% if (contentApprovalEnabled) { %>İçerik onayı açık olduğu için mesajlar yayınlanmadan önce onaya gider.<% } %>
+  </p>
+  <% if (currentUser.role === 'guest') { %>
+    <p class="status compact-top">Misafir profili yalnızca panoyu görüntüleyebilir.</p>
+  <% } else { %>
+    <form method="post" action="/anonymous-board" class="stack-form compact-top" id="anon-board-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <label for="anonymous-body">Panoya raptiyelenecek notun</label>
+      <textarea id="anonymous-body" name="body" maxlength="<%= maxLength %>" required placeholder="Kimse adını görmeden mantar panoya bir not bırak..."></textarea>
+      <div class="note-color-picker">
+        <span class="note-color-picker-label">Not rengi:</span>
+        <% allowedNoteColors.forEach(function(color, i) { %>
+          <label class="note-color-swatch-label" data-swatch="<%= color %>" title="<%= color %>">
+            <input type="radio" name="note_color" value="<%= color %>" <%= i === 0 ? 'checked' : '' %> />
+            <span class="note-color-swatch-dot"></span>
+          </label>
+        <% }) %>
+      </div>
+      <button type="submit" class="btn">Notu Panoya Raptiyele</button>
+    </form>
+  <% } %>
+</section>
+
+<section class="card">
+  <h2>Panodaki Notlar</h2>
+  <% if (!posts.length) { %>
+    <div class="empty-state">
+      <h3>Henüz panoya not raptiyelenmedi</h3>
+      <p>İlk not bırakıldığında burada görünecek.</p>
+    </div>
+  <% } else { %>
+    <div class="anonymous-board-grid cork-board">
+      <% posts.forEach(function(post) { %>
+        <article class="anonymous-note" <% if (post.note_color) { %>data-color="<%= post.note_color %>" style="--note-color:<%= post.note_color %>"<% } %>>
+          <p><%= post.body %></p>
+          <% const canDeletePost = canModerateBoard || Number(post.author_user_id || 0) === Number(currentUserId); %>
+          <% if (canModerateBoard) { %>
+            <small>Gönderen: <%= post.author_name || 'Silinmiş kullanıcı' %></small>
+          <% } %>
+          <% if (canDeletePost) { %>
+            <form method="post" action="/anonymous-board/<%= post.id %>/delete" class="inline-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="link-button danger">Sil</button>
+            </form>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

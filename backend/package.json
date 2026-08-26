@@ -1,0 +1,36 @@
+{
+  "name": "digital-yearbook-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "NODE_ENV=production node src/server.js",
+    "test": "node --test",
+    "init-db": "node scripts/init-db.js",
+    "create-admin": "node scripts/create-admin.js",
+    "export-yearbook": "node scripts/export-yearbook.js",
+    "recover-access": "node scripts/recover-access.js",
+    "backup-yearbook": "node scripts/backup-yearbook.js",
+    "restore-yearbook": "node scripts/restore-yearbook.js",
+    "migrate-to-postgres": "node scripts/migrate-sqlite-to-postgres.js",
+    "db-status": "node scripts/db-status.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "connect-pg-simple": "^10.0.0",
+    "connect-sqlite3": "^0.9.16",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.12.0",
+    "sharp": "^0.33.5",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "spessasynth_lib": "^4.3.7"
+  }
+}

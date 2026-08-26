@@ -1,0 +1,44 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow">
+  <h1>Erişim Kodun</h1>
+  <p class="subtle">Bu kodu kaybetme. Bundan sonraki girişlerinde erişim kodu alanına bu kodu yazacaksın.</p>
+
+  <div class="notice-card compact-top">
+    <p><strong>Giriş kimliği</strong></p>
+    <p><code><%= loginIdentifier %></code></p>
+    <p><strong>Erişim kodun</strong></p>
+    <p><code id="initial-access-code"><%= user.initial_access_code %></code></p>
+  </div>
+
+  <div class="inline-actions compact-top">
+    <button id="copy-access-code" type="button" class="btn alt">Kodu Kopyala</button>
+    <span id="copy-status" class="subtle" aria-live="polite"></span>
+  </div>
+
+  <form method="post" action="/first-access-code" class="stack-form compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <button type="submit" class="btn">Kodu Aldım, Devam Et</button>
+  </form>
+</section>
+
+<script nonce="<%= cspNonce %>">
+  (function () {
+    var button = document.getElementById('copy-access-code');
+    var code = document.getElementById('initial-access-code');
+    var status = document.getElementById('copy-status');
+    if (!button || !code || !status) return;
+    button.addEventListener('click', function () {
+      var value = code.textContent.trim();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(function () {
+          status.textContent = 'Kopyalandı.';
+        }).catch(function () {
+          status.textContent = 'Kopyalanamadı, kodu elle seçip kopyala.';
+        });
+      } else {
+        status.textContent = 'Kodu elle seçip kopyala.';
+      }
+    });
+  })();
+</script>
+<%- include('partials/footer') %>

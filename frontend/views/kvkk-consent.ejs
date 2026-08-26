@@ -1,0 +1,50 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>KVKK Açık Rıza Onayı</h1>
+  <p>
+    Devam etmeden önce lütfen <strong>KVKK Aydınlatma Metni</strong> ve <strong>Gizlilik Sözleşmesi</strong> sayfalarını dikkatlice okuyun.
+    Onay işlemi, bu metinleri anladığınızı ve kabul ettiğinizi beyan eder.
+  </p>
+
+  <div class="subtle">
+    <p><a href="/kvkk-aydinlatma-metni">KVKK Aydınlatma Metni'ni aç</a></p>
+    <p><a href="/gizlilik-sozlesmesi">Gizlilik Sözleşmesi'ni aç</a></p>
+    <p><a href="/acik-riza-metni">Açık Rıza Metni'ni aç</a></p>
+  </div>
+
+  <h2>Özet Bilgilendirme</h2>
+  <ul>
+    <li>Kişisel verileriniz yalnızca uygulama işleyişi, güvenlik, denetim ve yasal yükümlülükler için işlenir.</li>
+    <li>Yetkisiz erişime karşı teknik/idari tedbirler uygulanır ve veriler gerekli süre kadar saklanır.</li>
+    <li>KVKK kapsamındaki haklarınızı okul yönetimine başvurarak kullanabilirsiniz.</li>
+  </ul>
+
+  <form method="post" action="/kvkk-onay" class="stack-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <label for="kvkk-consent-check" class="checkbox-row">
+      <input id="kvkk-consent-check" type="checkbox" name="kvkk_consent" value="onayliyorum" required />
+      KVKK Aydınlatma Metni'ni okudum ve kişisel verilerimin belirtilen amaçlarla işlenmesine açık rıza veriyorum.
+    </label>
+
+    <label for="privacy-consent-check" class="checkbox-row">
+      <input id="privacy-consent-check" type="checkbox" name="privacy_consent" value="okudum_kabul_ediyorum" required />
+      Gizlilik Sözleşmesi'ni okudum, kabul ediyorum ve içerik kullanım kurallarına uyacağımı taahhüt ediyorum.
+    </label>
+
+
+    <label for="explicit-consent-check" class="checkbox-row">
+      <input id="explicit-consent-check" type="checkbox" name="explicit_consent" value="acik_riza_veriyorum" required />
+      Açık Rıza Metni'ni okudum; kimlik, profil, içerik, mesaj, medya ve güvenlik verilerimin platformun işleyişi ve veri işleme
+      amacı kapsamında işlenmesine açık rıza veriyorum.
+    </label>
+
+    <label for="cookie-consent-check" class="checkbox-row">
+      <input id="cookie-consent-check" type="checkbox" name="cookie_consent" value="cerezleri_kabul_ediyorum" required />
+      Platformun işleyişi için zorunlu çerezlerin (oturum, güvenlik) kullanılmasına onay veriyorum.
+    </label>
+
+    <button type="submit" class="btn">Onayla ve Devam Et</button>
+  </form>
+</section>
+<%- include('partials/footer') %>

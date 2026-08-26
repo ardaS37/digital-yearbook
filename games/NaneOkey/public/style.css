@@ -1,0 +1,25 @@
+@import url('/games/okey/play/style.css?v=20260530a');
+
+.meld-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.meld-card {
+  border-radius: 18px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.meld-meta {
+  margin-bottom: 8px;
+  color: #f7e3b4;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.meld-tiles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

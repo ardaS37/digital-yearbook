@@ -1,0 +1,141 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card">
+  <h1>Kayıt Merkezi</h1>
+  <p class="compact-top"><a href="/admin" class="btn small alt">Yönetim Paneline Dön</a></p>
+  <form method="get" action="/admin/logs" class="stack-form compact-top">
+    <label for="type">Kayıt Türü</label>
+    <select id="type" name="type">
+      <option value="all" <%= filter.type === 'all' ? 'selected' : '' %>>Tümü</option>
+      <option value="audit" <%= filter.type === 'audit' ? 'selected' : '' %>>Admin İşlem Geçmişi</option>
+      <option value="login" <%= filter.type === 'login' ? 'selected' : '' %>>Giriş Kayıtları</option>
+      <option value="app" <%= filter.type === 'app' ? 'selected' : '' %>>Sunucu Hata Logu</option>
+    </select>
+    <label for="q">Arama</label>
+    <input id="q" name="q" maxlength="120" value="<%= filter.q %>" placeholder="Aktör, kimlik, IP, detay..." />
+    <label for="action">Denetim Aksiyonu</label>
+    <select id="action" name="action">
+      <option value="">Tümü</option>
+      <% auditActions.forEach(function(action) { %>
+        <option value="<%= action %>" <%= filter.action === action ? 'selected' : '' %>><%= action %></option>
+      <% }) %>
+    </select>
+    <label for="status">Giriş Durumu</label>
+    <select id="status" name="status">
+      <option value="">Tümü</option>
+      <% ['success', 'success_suspicious', 'failed', 'blocked'].forEach(function(status) { %>
+        <option value="<%= status %>" <%= filter.status === status ? 'selected' : '' %>><%= status %></option>
+      <% }) %>
+    </select>
+    <div class="inline-actions">
+      <button type="submit" class="btn small">Filtrele</button>
+      <a class="btn small alt" href="/admin/logs/audit.csv?type=audit&q=<%= encodeURIComponent(filter.q) %>&action=<%= encodeURIComponent(filter.action) %>">Denetim CSV</a>
+      <a class="btn small alt" href="/admin/logs/login.csv?type=login&q=<%= encodeURIComponent(filter.q) %>&status=<%= encodeURIComponent(filter.status) %>">Giriş CSV</a>
+    </div>
+  </form>
+</section>
+
+<% if (filter.type !== 'login' && filter.type !== 'app') { %>
+  <section class="card">
+    <h2>Admin İşlem Geçmişi</h2>
+    <% if (!auditLogs.length) { %>
+      <p>Denetim kaydı yok.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr><th>Tarih</th><th>Aktör</th><th>Aksiyon</th><th>Hedef</th><th>Detay</th></tr>
+        </thead>
+        <tbody>
+          <% auditLogs.forEach(function(log) { %>
+            <tr>
+              <td><%= log.created_at %></td>
+              <td><%= log.actor_name || 'Sistem' %></td>
+              <td><%= log.action %></td>
+              <td><%= log.target_type %><% if (log.target_id) { %>#<%= log.target_id %><% } %></td>
+              <td><pre><%= JSON.stringify(log.details, null, 2) %></pre></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% } %>
+
+<% if (filter.type !== 'audit' && filter.type !== 'app') { %>
+  <section class="card">
+    <h2>Giriş Kayıtları</h2>
+    <% if (!loginAttempts.length) { %>
+      <p>Giriş kaydı yok.</p>
+    <% } else { %>
+      <table>
+        <thead>
+          <tr><th>Tarih</th><th>Durum</th><th>Rol / Kimlik</th><th>Hesap</th><th>IP</th><th>Cihaz / Tarayıcı</th><th>Detay</th></tr>
+        </thead>
+        <tbody>
+          <% loginAttempts.forEach(function(item) { %>
+            <%
+              const statusClass = item.status === 'success' ? 'log-badge ok' :
+                                  item.status === 'success_suspicious' ? 'log-badge warn' :
+                                  item.status === 'failed' ? 'log-badge err' :
+                                  item.status === 'blocked' ? 'log-badge err' : 'log-badge';
+              const statusLabel = item.status === 'success' ? 'Başarılı' :
+                                  item.status === 'success_suspicious' ? 'Şüpheli ✓' :
+                                  item.status === 'failed' ? 'Başarısız' :
+                                  item.status === 'blocked' ? 'Engel' : item.status;
+              const deviceIcon = item.device_type === 'mobile' ? '📱' :
+                                 item.device_type === 'tablet' ? '📟' : '💻';
+              const browserStr = [item.browser_name, item.browser_version].filter(Boolean).join(' ') || 'Bilinmiyor';
+              const osStr = [item.os_name, item.os_version].filter(Boolean).join(' ') || 'Bilinmiyor';
+            %>
+            <tr>
+              <td style="white-space:nowrap"><%= item.created_at %></td>
+              <td><span class="<%= statusClass %>"><%= statusLabel %></span></td>
+              <td><strong><%= item.role || '-' %></strong><br><small><%= item.identifier || '-' %></small></td>
+              <td><%= item.resolved_user_name || '-' %></td>
+              <td>
+                <code><%= item.ip_address || '-' %></code>
+                <% if (item.ip_chain && item.ip_chain !== item.ip_address) { %><br><small class="subtle">Proxy: <%= item.ip_chain %></small><% } %>
+              </td>
+              <td>
+                <div><%= deviceIcon %> <%= browserStr %></div>
+                <small><%= osStr %></small>
+                <% if (item.device_model) { %><br><small class="subtle"><%= item.device_model %></small><% } %>
+              </td>
+              <td>
+                <div><small><%= item.reason %></small></div>
+                <% if (item.attemptedIdentifiers.length) { %>
+                  <small class="subtle">Önce: <%= item.attemptedIdentifiers.map(function(e){ return e.role+':'+e.identifier; }).join(', ') %></small>
+                <% } %>
+                <% const hasNonEmptyHeaders = Object.values(item.requestHeaders).some(function(v){ return v; }); %>
+                <% if (hasNonEmptyHeaders) { %>
+                  <details>
+                    <summary><small>HTTP Başlıkları</small></summary>
+                    <pre style="font-size:0.7rem;max-width:280px;overflow:auto"><%= JSON.stringify(item.requestHeaders, null, 2) %></pre>
+                  </details>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+<% } %>
+
+<% if (filter.type === 'all' || filter.type === 'app') { %>
+  <section class="card">
+    <h2>Sunucu Hata Logu</h2>
+    <p class="subtle">Terminalde görülen uygulama hatalarının dosyaya yazılan son kayıtları burada görünür.</p>
+    <% if (!appLogs.length) { %>
+      <p>Sunucu hata logu yok.</p>
+    <% } else { %>
+      <div class="stack-list compact-top">
+        <% appLogs.forEach(function(entry) { %>
+          <article class="notice">
+            <pre><%= entry %></pre>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </section>
+<% } %>
+<%- include('../partials/footer') %>

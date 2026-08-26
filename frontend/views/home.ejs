@@ -1,0 +1,186 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="hero card <%= homeBackgroundPath ? 'hero-with-background' : '' %>">
+  <% if (homeBackgroundPath) { %>
+    <div class="hero-background-media" aria-hidden="true">
+      <img src="<%= homeBackgroundPath %>" alt="" loading="lazy" />
+    </div>
+  <% } %>
+  <div class="hero-content">
+    <h1>Hoş geldin, <%= currentUser.name %></h1>
+    <% if (homeHeroText) { %><p><%= homeHeroText %></p><% } %>
+    <% if (featureFlags.closing_page !== false && graduationDate) { %>
+      <p class="hero-countdown">Mezuniyete kalan: <strong><%= Math.max(0, Math.ceil((new Date(graduationDate).getTime() - Date.now()) / 86400000)) %></strong> gün</p>
+    <% } %>
+    <% if (featureFlags.closing_page !== false && (closingTitle || closingBody)) { %>
+      <p><a href="/closing">Kapanış sayfasını aç</a></p>
+    <% } %>
+    <div class="hero-actions">
+      <% if (currentUser.role !== 'admin') { %>
+        <a class="btn" href="/profiles/<%= currentUser.id %>">Profilim</a>
+      <% } %>
+      <% if (currentUser.class_branch) { %>
+        <a class="btn alt" href="/classes/<%= currentUser.class_branch %>">Sınıfım</a>
+      <% } %>
+      <a class="btn alt" href="/search">Arama</a>
+    </div>
+  </div>
+</section>
+
+<% if (featureFlags.announcements !== false && announcements.length) { %>
+  <section class="card">
+    <h2>Duyurular</h2>
+    <div class="stack-list">
+      <% announcements.forEach(function(item) { %>
+        <div class="notice notice-announcement">
+          <span class="notice-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </span>
+          <div class="notice-content">
+            <strong><%= item.title %></strong>
+            <p><%= item.body %></p>
+            <p class="subtle"><%= item.author_name %> · <%= item.created_at %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (featureFlags.birthdays !== false && birthdaysToday.length) { %>
+  <section class="card">
+    <h2>Bugünün Doğum Günleri</h2>
+    <div class="stack-list">
+      <% birthdaysToday.forEach(function(item) { %>
+        <div class="notice success notice-birthday">
+          <span class="notice-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2 1 2 1"/><line x1="12" y1="11" x2="12" y2="3"/><path d="M9 6c0-1.1.9-2 2-2a1 1 0 0 0 1-1"/></svg>
+          </span>
+          <div class="notice-content">
+            <strong><a href="/profiles/<%= item.id %>"><%= item.name %></a></strong>
+            <p>Bugün doğum günü 🎉 İyi ki doğdun!</p>
+            <p class="subtle"><%= item.class_branch || (item.role === 'teacher' ? 'Öğretmen' : 'Profil') %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (featureFlags.announcements !== false && canPublishAnnouncements) { %>
+  <section class="card">
+    <h2>Duyuru Yayınla</h2>
+    <form action="/announcements" method="post" class="stack-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input name="title" maxlength="120" placeholder="Duyuru başlığı" required />
+      <textarea name="body" maxlength="2000" placeholder="Duyuru metni" required></textarea>
+      <button type="submit" class="btn">Duyuru Yayınla</button>
+    </form>
+  </section>
+<% } %>
+
+<section class="card">
+  <h2>Sınıflar</h2>
+  <div class="class-showcase-grid <%= allowedClasses.length >= 5 ? 'five-up' : '' %>" style="--class-count: <%= Math.min(allowedClasses.length, 5) %>;">
+    <% allowedClasses.forEach(function(branch) { %>
+      <% const found = classStats.find((c) => c.class_branch === branch); %>
+      <a class="class-showcase-card compact" href="/classes/<%= branch %>">
+        <div class="class-showcase-media">
+          <% if (found && found.cover_photo_path) { %>
+            <img src="<%= found.cover_photo_path %>" alt="<%= branch %> kapak fotoğrafı" loading="lazy" />
+          <% } else { %>
+            <div class="class-showcase-fallback"><span><%= branch %></span></div>
+          <% } %>
+        </div>
+        <div class="class-showcase-body">
+          <div class="class-showcase-top">
+            <strong><%= branch %></strong>
+            <span><%= found ? found.total : 0 %> öğrenci</span>
+          </div>
+          <p><%= found && found.class_slogan ? found.class_slogan : 'Kapak sloganı bekleniyor.' %></p>
+        </div>
+      </a>
+    <% }); %>
+  </div>
+  <p class="subtle"><a href="/teachers">Öğretmenler</a>: <%= teachersCount %></p>
+</section>
+
+
+<section class="card">
+  <h2>Son Mesajlar</h2>
+  <% if (!latestMessages.length) { %>
+    <p class="subtle">Henüz mesaj yok.</p>
+  <% } else { %>
+    <ul class="recent-messages-list">
+      <% latestMessages.forEach(function(item) { %>
+        <li class="recent-message-item">
+          <div class="recent-message-header">
+            <span class="recent-message-route">
+              <a href="/profiles/<%= item.sender_id %>"><%= item.sender_name %></a>
+              <span class="recent-message-arrow">→</span>
+              <a href="/profiles/<%= item.receiver_id %>"><%= item.receiver_name %></a>
+            </span>
+            <small class="subtle recent-message-time"><%= item.created_at %></small>
+          </div>
+          <p class="recent-message-body"><%= item.message %></p>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+</section>
+
+<div class="leaderboard-grid">
+  <section class="card">
+    <h2>En Çok Yorum</h2>
+    <% if (!topCommenters.length) { %>
+      <p class="subtle">Henüz sıralama oluşmadı.</p>
+    <% } else { %>
+      <ol class="leaderboard-list">
+        <% topCommenters.forEach(function(item) { %>
+          <li>
+            <a href="/profiles/<%= item.id %>"><%= item.name %></a>
+            <span><%= item.message_count %> yorum</span>
+          </li>
+        <% }) %>
+      </ol>
+    <% } %>
+  </section>
+
+  <% if (featureFlags.top_visited_profiles !== false && featureFlags.view_counts !== false) { %>
+    <section class="card">
+      <h2>En Çok Ziyaret</h2>
+      <% if (!topVisitedProfiles.length) { %>
+        <p class="subtle">Henüz ziyaret verisi oluşmadı.</p>
+      <% } else { %>
+        <ol class="leaderboard-list">
+          <% topVisitedProfiles.forEach(function(item) { %>
+            <li>
+              <a href="/profiles/<%= item.id %>"><%= item.name %></a>
+              <span><%= item.profile_visit_count %> ziyaret</span>
+            </li>
+          <% }) %>
+        </ol>
+      <% } %>
+    </section>
+  <% } %>
+
+  <section class="card">
+    <h2>En Çok Beğeni</h2>
+    <% if (!topLikedProfiles.length) { %>
+      <p class="subtle">Henüz beğeni yok.</p>
+    <% } else { %>
+      <ol class="leaderboard-list">
+        <% topLikedProfiles.forEach(function(item) { %>
+          <li>
+            <a href="/profiles/<%= item.id %>"><%= item.name %></a>
+            <span><%= item.like_count %> beğeni</span>
+          </li>
+        <% }) %>
+      </ol>
+    <% } %>
+  </section>
+</div>
+
+<p class="subtle footer-credit">
+  Arda Saplıoğlu tarafından hazırlanmıştır
+</p>
+<%- include('partials/footer') %>

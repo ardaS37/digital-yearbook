@@ -1,0 +1,20 @@
+<%- include('../partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow">
+  <h1><%= summary.title %></h1>
+  <p><%= summary.description %></p>
+
+  <form action="<%= summary.actionPath %>" method="post" class="stack-form compact-top">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+    <% Object.keys(summary.fields || {}).forEach(function(key) { %>
+      <input type="hidden" name="<%= key %>" value="<%= summary.fields[key] %>" />
+    <% }) %>
+
+    <label for="admin_access_code">Yönetici erişim kodu</label>
+    <input id="admin_access_code" type="password" name="admin_access_code" maxlength="100" required />
+
+    <button type="submit" class="btn">İşlemi Onayla</button>
+  </form>
+
+  <p class="compact-top"><a href="<%= backTo || '/admin' %>">Geri dön</a></p>
+</section>
+<%- include('../partials/footer') %>

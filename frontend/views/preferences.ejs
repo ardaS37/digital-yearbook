@@ -1,0 +1,191 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card preferences-card">
+  <h1>Hoş Geldin, <%= currentUser.name %>! 👋</h1>
+  <p>Sana özel görünüm tercihlerini seç. <span class="subtle">İstediğin zaman Ayarlar sayfasından değiştirebilirsin.</span></p>
+
+  <div class="pref-section">
+    <h2>Tema</h2>
+    <div class="pref-btn-group" id="pref-theme-group">
+      <button class="pref-btn" data-val="light" type="button">
+        <span class="pref-btn-icon">☀️</span>
+        <span>Aydınlık</span>
+      </button>
+      <button class="pref-btn" data-val="dark" type="button">
+        <span class="pref-btn-icon">🌙</span>
+        <span>Koyu</span>
+      </button>
+      <button class="pref-btn" data-val="system" type="button">
+        <span class="pref-btn-icon">🖥️</span>
+        <span>Sistem</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="pref-section">
+    <h2>Tema Rengi</h2>
+    <div class="pref-btn-group" id="pref-color-group">
+      <button class="pref-btn" data-val="random" type="button">
+        <span class="pref-btn-icon">🎨</span>
+        <span>Her Girişte Rastgele</span>
+      </button>
+      <button class="pref-btn" data-val="fixed" type="button">
+        <span class="pref-btn-icon">🎯</span>
+        <span>Sabit Renk</span>
+      </button>
+    </div>
+    <p class="subtle compact-top">Ayarlardan istediğin rengi kendin de seçebilirsin.</p>
+  </div>
+
+  <div class="pref-section">
+    <h2>Cam Efekti</h2>
+    <div class="pref-btn-group" id="pref-glass-group">
+      <button class="pref-btn" data-val="on" type="button">
+        <span class="pref-btn-icon">✨</span>
+        <span>Cam Tema</span>
+      </button>
+      <button class="pref-btn" data-val="off" type="button">
+        <span class="pref-btn-icon">🟦</span>
+        <span>Normal</span>
+      </button>
+    </div>
+    <p class="subtle compact-top">Yönetici cam efektini kapatmışsa bu tercih geçersiz olur. Eski veya düşük güçlü cihazlarda performans için <strong>Normal</strong> seçmenizi öneririz. Ayrıca mobil cihazlar için de <strong>Normal</strong> önerilir.</p>
+  </div>
+
+  <div class="pref-section">
+    <h2>Arkaplan Müziği</h2>
+    <div class="pref-btn-group" id="pref-bgm-group">
+      <button class="pref-btn" data-val="instrument" type="button">
+        <span class="pref-btn-icon">🎹</span>
+        <span>Enstrüman</span>
+      </button>
+      <button class="pref-btn" data-val="oscillator" type="button">
+        <span class="pref-btn-icon">〰️</span>
+        <span>Osilatör</span>
+      </button>
+      <button class="pref-btn" data-val="off" type="button">
+        <span class="pref-btn-icon">🔇</span>
+        <span>Kapalı</span>
+      </button>
+    </div>
+    <p class="subtle compact-top">Müziğin ilk kez yüklenmesi zaman alabilir.</p>
+  </div>
+
+  <button class="btn" id="pref-continue" type="button">Devam Et</button>
+</section>
+
+<style nonce="<%= cspNonce %>">
+  .preferences-card { max-width: 480px; margin-inline: auto; }
+  .pref-section { margin-top: 1.5rem; }
+  .pref-section h2 { margin-bottom: 0.75rem; font-size: 1rem; }
+  .pref-btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .pref-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+    padding: 1rem 1.25rem; border-radius: 14px; cursor: pointer;
+    border: 2px solid var(--line); background: var(--surface);
+    font-size: 0.9rem; font-weight: 600; color: var(--ink);
+    transition: border-color 0.15s, background 0.15s, transform 0.12s;
+    min-width: 100px;
+  }
+  .pref-btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .pref-btn.selected {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    color: var(--accent-readable);
+  }
+  .pref-btn-icon { font-size: 1.6rem; }
+  #pref-continue { margin-top: 2rem; width: 100%; }
+</style>
+
+<script nonce="<%= cspNonce %>">
+  (function () {
+    var serverGlass = document.body.getAttribute('data-liquid-glass');
+    var selectedTheme = 'system';
+    var selectedGlass = 'off';
+    var selectedColor = 'random';
+    var selectedBgm = 'off';
+
+    /* Aktif seçimi varsayılan olarak mevcut localStorage'dan al */
+    try {
+      var storedTheme = localStorage.getItem('themePreference');
+      if (['light','dark','system'].includes(storedTheme)) selectedTheme = storedTheme;
+      var storedGlass = localStorage.getItem('liquidGlassOverride');
+      if (storedGlass === 'on' || storedGlass === 'off') selectedGlass = storedGlass;
+      else {
+        var isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+        selectedGlass = isMobile ? 'off' : 'on';
+      }
+      if (localStorage.getItem('userAccentColor')) selectedColor = 'fixed';
+      var storedBgm = localStorage.getItem('bgmEnabled');
+      /* 'on' eski değer → 'instrument' olarak oku */
+      if (storedBgm === 'on' || storedBgm === 'instrument') selectedBgm = 'instrument';
+      else if (storedBgm === 'oscillator') selectedBgm = 'oscillator';
+      else if (storedBgm === 'off') selectedBgm = 'off';
+    } catch(e) {}
+
+    function highlight(groupId, val) {
+      document.querySelectorAll('#' + groupId + ' .pref-btn').forEach(function(btn) {
+        btn.classList.toggle('selected', btn.dataset.val === val);
+      });
+    }
+
+    function applyTheme(val) {
+      selectedTheme = val;
+      try { localStorage.setItem('themePreference', val); } catch(e) {}
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var resolved = val === 'system' ? (prefersDark ? 'dark' : 'light') : val;
+      document.documentElement.setAttribute('data-theme-preference', val);
+      document.documentElement.setAttribute('data-theme', resolved);
+      highlight('pref-theme-group', val);
+    }
+
+    function applyGlass(val) {
+      selectedGlass = val;
+      try { localStorage.setItem('liquidGlassOverride', val); } catch(e) {}
+      document.body.setAttribute('data-liquid-glass', val);
+      highlight('pref-glass-group', val);
+    }
+
+    function applyColor(val) {
+      selectedColor = val;
+      if (val === 'random') {
+        try { localStorage.removeItem('userAccentColor'); sessionStorage.removeItem('sessionAccentColor'); } catch(e) {}
+      }
+      highlight('pref-color-group', val);
+    }
+
+    function applyBgm(val) {
+      selectedBgm = val;
+      try { localStorage.setItem('bgmEnabled', val); } catch(e) {}
+      highlight('pref-bgm-group', val);
+    }
+
+    document.querySelectorAll('#pref-theme-group .pref-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { applyTheme(btn.dataset.val); });
+    });
+    document.querySelectorAll('#pref-glass-group .pref-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { applyGlass(btn.dataset.val); });
+    });
+    document.querySelectorAll('#pref-color-group .pref-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { applyColor(btn.dataset.val); });
+    });
+    document.querySelectorAll('#pref-bgm-group .pref-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() { applyBgm(btn.dataset.val); });
+    });
+
+    document.getElementById('pref-continue').addEventListener('click', function() {
+      try {
+        localStorage.setItem('themePreference', selectedTheme);
+        localStorage.setItem('liquidGlassOverride', selectedGlass);
+        localStorage.setItem('bgmEnabled', selectedBgm);
+      } catch(e) {}
+      window.location.href = '/';
+    });
+
+    /* İlk highlight */
+    highlight('pref-theme-group', selectedTheme);
+    highlight('pref-glass-group', selectedGlass);
+    highlight('pref-color-group', selectedColor);
+    highlight('pref-bgm-group', selectedBgm);
+  })();
+</script>
+<%- include('partials/footer') %>

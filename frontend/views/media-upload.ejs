@@ -1,0 +1,58 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+<section class="card narrow">
+  <h1>Fotoğraf Yükle</h1>
+  <p class="subtle">Genel galeriye veya sınıf galerisine hızlı yükleme yap.</p>
+
+  <form method="post" action="/media/upload?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+    <label for="scope">Yayın Alanı</label>
+    <select id="scope" name="scope">
+      <option value="general" <%= classFilter === 'general' ? 'selected' : '' %>>Genel</option>
+      <option value="class" <%= classFilter !== 'general' ? 'selected' : '' %>>Sınıf</option>
+    </select>
+
+    <label for="class_branch">Sınıf Şubesi</label>
+    <select id="class_branch" name="class_branch">
+      <option value="">Seçiniz</option>
+      <% allowedClasses.forEach(function(branch) { %>
+        <option value="<%= branch %>" <%= classFilter === branch ? 'selected' : '' %>><%= branch %></option>
+      <% }) %>
+    </select>
+
+    <label for="photos">Fotoğraflar</label>
+    <input id="photos" type="file" name="photos" accept="image/*" multiple required />
+
+    <label for="album_id">Albüm</label>
+    <select id="album_id" name="album_id">
+      <option value="">Albüm seçilmedi</option>
+      <% albums.forEach(function(album) { %>
+        <option value="<%= album.id %>"><%= album.title %> - <%= album.album_type === 'class' ? 'Sınıf albümü' : 'Okul albümü' %></option>
+      <% }) %>
+    </select>
+
+    <label for="new_album_title">Yeni Albüm Adı</label>
+    <input id="new_album_title" name="new_album_title" maxlength="120" placeholder="İstersen yeni albüm oluştur" />
+
+    <label for="new_album_description">Albüm Açıklaması</label>
+    <input id="new_album_description" name="new_album_description" maxlength="300" placeholder="Albüm açıklaması" />
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="is_collage" value="yes" /> Kollaj olarak yükle
+    </label>
+
+    <label for="caption">Açıklama</label>
+    <input id="caption" name="caption" maxlength="2000" placeholder="Açıklama" />
+
+    <label for="date_stamp_text">Tarih Damgası</label>
+    <input id="date_stamp_text" name="date_stamp_text" maxlength="2000" placeholder="örn: 06.03.2026" />
+
+    <label class="checkbox-line">
+      <input type="checkbox" name="use_current_date" value="yes" /> Boşsa bugünün tarihini ekle
+    </label>
+
+    <div class="inline-actions">
+      <button type="submit" class="btn">Yükle</button>
+      <a href="/gallery?class=<%= classFilter %>" class="btn alt">Galeriye Dön</a>
+    </div>
+  </form>
+</section>
+<%- include('partials/footer') %>

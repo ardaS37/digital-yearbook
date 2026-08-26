@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mangala</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Türk Zeka Oyunu</p>
+        <h1>Mangala</h1>
+        <p>48 taş, 12 kuyu, iki hazine. PC’ye karşı veya yıllık hesabınla online oda kurarak oyna.</p>
+      </div>
+      <a class="ghost-link" href="/games">Oyunlara dön</a>
+    </header>
+
+    <section class="panel mode-panel">
+      <div>
+        <p class="label">Oyun</p>
+        <select id="game-select">
+          <option value="mangala">Mangala</option>
+          <option value="reversi">Reversi</option>
+          <option value="xox">XOX</option>
+          <option value="sos">SOS</option>
+          <option value="kutu-doldurmaca">Kutu Doldurmaca</option>
+          <option value="yilanlar-ve-merdivenler">Yılanlar ve Merdivenler</option>
+          <option value="9-tas">9 Taş</option>
+          <option value="3-tas">3 Taş</option>
+          <option value="dama">Dama</option>
+          <option value="capraz-dama">Çapraz Dama</option>
+          <option value="abalone">Abalone</option>
+          <option value="tavla">Tavla</option>
+          <option value="koridor">Koridor</option>
+          <option value="satranc">Satranç</option>
+          <option value="dortlu-birlestir">4lü Birleştir</option>
+          <option value="mastermind">Mastermind</option>
+          <option value="domino">Domino</option>
+          <option value="go">Go</option>
+          <option value="kizma-birader">Kızma Birader</option>
+        </select>
+      </div>
+      <div>
+        <p class="label">Oyuncu</p>
+        <strong id="player-name">Yükleniyor...</strong>
+      </div>
+      <div class="mode-actions">
+        <button id="pc-mode" class="primary" type="button">PC’ye Karşı</button>
+        <button id="create-room" type="button">Online Oda Kur</button>
+      </div>
+      <form id="join-form" class="join-form">
+        <input id="room-code-input" type="text" placeholder="Oda kodu" maxlength="6" autocomplete="off">
+        <button type="submit">Odaya Katıl</button>
+      </form>
+      <div class="open-rooms">
+        <div class="open-rooms-head">
+          <strong>Açık Odalar</strong>
+          <button id="refresh-rooms" class="mini" type="button">Yenile</button>
+        </div>
+        <div id="open-rooms-list" class="open-rooms-list">Yükleniyor...</div>
+      </div>
+    </section>
+
+    <section class="game-layout">
+      <aside class="panel status-panel">
+        <p class="label">Oda</p>
+        <h2 id="room-title">Henüz oda yok</h2>
+        <div class="score-card x">
+          <span id="player-x">X Oyuncusu</span>
+          <strong id="store-x">0</strong>
+        </div>
+        <div class="score-card o">
+          <span id="player-o">O Oyuncusu</span>
+          <strong id="store-o">0</strong>
+        </div>
+        <div class="turn-card">
+          <p class="label">Sıra</p>
+          <strong id="turn-label">-</strong>
+        </div>
+        <p id="message" class="message">PC’ye karşı başla veya online oda kur.</p>
+        <button id="new-pc" class="wide" type="button">Yeni PC Oyunu</button>
+      </aside>
+
+      <section class="board-wrap">
+        <div class="mangala-board" id="board" aria-label="Mangala tahtası"></div>
+      </section>
+
+      <aside class="panel rules-panel">
+        <h2>Kısa Kural</h2>
+        <p>Kendi tarafındaki 6 kuyudan birini seç. Taşları saat yönünün tersine dağıt.</p>
+        <p>Son taş rakip kuyuyu çift yaparsa o kuyudaki taşları alırsın. Son taş kendi boş kuyuna düşerse karşı kuyuyu da alırsın.</p>
+        <p>Son taş rakip kuyuyu 3 yaparsa kale kurulur. Kale kuyusuna düşen taşlar kale sahibinin hazinesine gider.</p>
+      </aside>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

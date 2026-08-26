@@ -1,0 +1,338 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce, pageThemeColor }) %>
+<% if (pageThemeColor && pageThemeAltColor) { %>
+  <style nonce="<%= cspNonce %>">
+    .class-theme-scope {
+      --class-theme: <%= pageThemeColor %>;
+      --class-theme-alt: <%= pageThemeAltColor %>;
+      --class-button: <%= pageThemeButtonColor || pageThemeColor %>;
+      --class-button-alt: <%= pageThemeButtonAltColor || pageThemeAltColor %>;
+      --class-button-text: <%= pageThemeButtonTextColor || '#ffffff' %>;
+      --class-button-alt-text: <%= pageThemeButtonAltTextColor || '#ffffff' %>;
+    }
+  </style>
+<% } %>
+<div class="class-theme-scope">
+<section class="card class-theme-card" style="--class-theme: <%= classPage.theme_color || '#0d6e6e' %>;">
+  <div class="class-cover-shell">
+      <div class="class-cover-visual">
+      <% if (classPage.cover_photo_path) { %>
+        <img src="<%= classPage.cover_photo_path %>" alt="<%= classBranch %> kapak fotoğrafı" class="class-cover-image" />
+      <% } else { %>
+        <div class="class-cover-placeholder"><span><%= classBranch %></span></div>
+      <% } %>
+    </div>
+    <div class="class-cover-content">
+      <p class="eyebrow">Sınıf Kapak Sayfası</p>
+      <h1><%= classBranch %></h1>
+      <p class="class-cover-slogan"><%= classPage.class_slogan || 'Bu sınıf için henüz ortak bir slogan eklenmedi.' %></p>
+      <% if (canEditClassPage) { %>
+        <p class="class-theme-chip">Tema: <%= classPage.theme_color || '#0d6e6e' %></p>
+      <% } %>
+      <div class="class-meta-stack">
+        <p><a href="/classes">Sınıflara Dön</a></p>
+        <p><a href="/print/classes/<%= classBranch %>" target="_blank" rel="noopener noreferrer">Yazdırılabilir görünüm</a></p>
+        <% if (canEditClassPage) { %>
+          <p><strong>Tema Rengi:</strong> <input type="color" value="<%= classPage.theme_color || '#0d6e6e' %>" disabled /> <span class="subtle"><%= classPage.theme_color || '#0d6e6e' %></span></p>
+        <% } %>
+        <% if (canEditClassPage) { %>
+          <p class="subtle">Foto tamamlayanlar: <%= completion.withPhoto %>/<%= completion.total %> - Slogan tamamlayanlar: <%= completion.withSlogan %>/<%= completion.total %></p>
+        <% } %>
+        <% if (classPage.president_name) { %>
+          <p class="class-president-badge">Sınıf Başkanı: <a href="/profiles/<%= classPage.president_id %>"><%= classPage.president_name %></a></p>
+        <% } else { %>
+          <p class="subtle">Sınıf başkanı henüz atanmadı.</p>
+        <% } %>
+        <% if (classPage.updated_at) { %>
+          <p class="subtle">Son güncelleme: <%= classPage.updated_at %><% if (classPage.editor_name) { %> - <%= classPage.editor_name %><% } %></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<% if (featureFlags.class_pages !== false && canEditClassPage) { %>
+  <section class="card">
+    <h2>Kapak Sayfasını Düzenle</h2>
+    <p class="subtle">Bu alanı yalnızca yönetici veya <%= classBranch %> sınıf başkanı güncelleyebilir.</p>
+    <form method="post" action="/classes/<%= classBranch %>/cover?_csrf=<%= encodeURIComponent(csrfToken) %>" enctype="multipart/form-data" class="stack-form compact-top">
+      <label for="cover_photo">Kapak Fotoğrafı</label>
+      <input id="cover_photo" type="file" name="cover_photo" accept="image/*" />
+
+      <label for="class_slogan">Sınıf Sloganı</label>
+      <textarea id="class_slogan" name="class_slogan" maxlength="300" placeholder="Sınıf ruhunu yansıtan kısa bir slogan"><%= classPage.class_slogan || '' %></textarea>
+
+      <label for="theme_color">Sınıf Tema Rengi</label>
+      <input id="theme_color" type="color" name="theme_color" value="<%= classPage.theme_color || '#0d6e6e' %>" />
+
+      <button type="submit" class="btn">Kapak Sayfasını Güncelle</button>
+    </form>
+  </section>
+<% } %>
+
+<% if (featureFlags.class_president_announcements !== false) { %><section class="card">
+  <h2>Sınıf Başkanı Duyuruları</h2>
+  <% if (canEditClassPage) { %>
+    <form method="post" action="/classes/<%= classBranch %>/announcements" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input name="title" maxlength="120" placeholder="Duyuru başlığı" required />
+      <textarea name="body" maxlength="1500" placeholder="Sınıf duyurusu metni" required></textarea>
+      <button type="submit" class="btn">Duyuru Ekle</button>
+    </form>
+  <% } %>
+  <% if (!presidentAnnouncements.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz duyuru yok</h3>
+      <p>Sınıf başkanı veya yönetici ilk duyuruyu ekleyebilir.</p>
+    </div>
+  <% } else { %>
+    <div class="stack-list compact-top">
+      <% presidentAnnouncements.forEach(function(item) { %>
+        <div class="notice">
+          <strong><%= item.title %></strong>
+          <p><%= item.body %></p>
+          <p class="subtle"><%= item.author_name %> - <%= item.updated_at || item.created_at %></p>
+          <% if (canEditClassPage) { %>
+            <form method="post" action="/classes/<%= classBranch %>/announcements/<%= item.id %>/delete" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn danger small">Sil</button>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<% if (featureFlags.class_achievements !== false) { %><section class="card">
+  <h2>Başarı Panosu</h2>
+  <% if (canEditClassPage) { %>
+    <form method="post" action="/classes/<%= classBranch %>/achievements" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input name="title" maxlength="120" placeholder="Başarı başlığı" required />
+      <textarea name="body" maxlength="1000" placeholder="Başarı açıklaması" required></textarea>
+      <button type="submit" class="btn alt">Başarı Ekle</button>
+    </form>
+  <% } %>
+  <% if (!classAchievements.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz başarı kaydı yok</h3>
+      <p>Yarışma, etkinlik ve sınıf başarıları burada öne çıkar.</p>
+    </div>
+  <% } else { %>
+    <div class="stack-list compact-top">
+      <% classAchievements.forEach(function(item) { %>
+        <div class="notice">
+          <strong><%= item.title %></strong>
+          <p><%= item.body %></p>
+          <p class="subtle"><%= item.author_name %> - <%= item.created_at %></p>
+          <% if (canEditClassPage) { %>
+            <form method="post" action="/classes/<%= classBranch %>/achievements/<%= item.id %>/delete" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn danger small">Sil</button>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<% if (featureFlags.class_featured_gallery !== false) { %><section class="card">
+  <h2>Sınıf Galerisinden Öne Çıkanlar</h2>
+  <% if (canEditClassPage && classGalleryCandidates.length) { %>
+    <form method="post" action="/classes/<%= classBranch %>/featured-gallery" class="search-row compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <select name="photo_id" required>
+        <option value="">Fotoğraf seç</option>
+        <% classGalleryCandidates.forEach(function(photo) { %>
+          <option value="<%= photo.id %>">#<%= photo.id %> - <%= photo.caption || photo.created_at %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="btn">Öne Çıkanlara Ekle</button>
+    </form>
+  <% } %>
+  <% if (!featuredGalleryItems.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz öne çıkan fotoğraf yok</h3>
+      <p>Sınıf galerinizden öne çıkan kareleri burada sergileyin.</p>
+    </div>
+  <% } else { %>
+    <div class="profile-grid compact-top">
+      <% featuredGalleryItems.forEach(function(item) { %>
+        <div class="profile-card media-card">
+          <img src="<%= item.photo_path %>" alt="Öne çıkan sınıf fotoğrafı" loading="lazy" />
+          <p><%= item.caption || 'Açıklama yok.' %></p>
+          <p class="subtle"><%= item.uploader_name %> - <%= item.created_at %></p>
+          <% if (canEditClassPage) { %>
+            <form method="post" action="/classes/<%= classBranch %>/featured-gallery/<%= item.id %>/delete" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn danger small">Sil</button>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<% if (featureFlags.class_polls !== false) { %><section class="card">
+  <h2>Sınıf İçi Anketler</h2>
+  <% if (canEditClassPage) { %>
+    <form method="post" action="/classes/<%= classBranch %>/polls" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input name="question" maxlength="180" placeholder="Anket sorusu" required />
+      <textarea name="options" maxlength="800" placeholder="Her satıra bir seçenek yaz" required></textarea>
+      <label class="checkbox-line">
+        <input type="checkbox" name="allow_multiple" value="yes" />
+        Birden fazla seçeneğe izin ver
+      </label>
+      <button type="submit" class="btn">Anket Oluştur</button>
+    </form>
+  <% } %>
+  <% if (!polls.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz anket yok</h3>
+      <p>Sınıf içi küçük oylamalar burada görünecek.</p>
+    </div>
+  <% } else { %>
+    <div class="stack-list compact-top">
+      <% polls.forEach(function(poll) { %>
+        <article class="timeline-card">
+          <p class="eyebrow"><%= poll.author_name %> - <%= poll.created_at %></p>
+          <h3><%= poll.question %></h3>
+          <% if (canVoteInClassPoll && !poll.is_closed) { %>
+            <form method="post" action="/classes/<%= classBranch %>/polls/<%= poll.id %>/vote" class="stack-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <% poll.options.forEach(function(option) { %>
+                <label class="checkbox-line">
+                  <input type="<%= poll.allow_multiple ? 'checkbox' : 'radio' %>" name="option_ids" value="<%= option.id %>" <%= poll.myVotes.includes(option.id) ? 'checked' : '' %> />
+                  <span><%= option.option_text %> - <strong><%= option.vote_count %></strong> oy</span>
+                </label>
+              <% }) %>
+              <button type="submit" class="btn alt">Oyumu Kaydet</button>
+            </form>
+          <% } else { %>
+            <div class="stack-list compact-top">
+              <% poll.options.forEach(function(option) { %>
+                <div class="notice compact">
+                  <p><%= option.option_text %> - <strong><%= option.vote_count %></strong> oy</p>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+          <p class="subtle compact-top"><%= poll.is_closed ? 'Anket kapalı' : 'Anket açık' %></p>
+          <% if (canEditClassPage) { %>
+            <form method="post" action="/classes/<%= classBranch %>/polls/<%= poll.id %>/toggle" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn small"><%= poll.is_closed ? 'Anketi Aç' : 'Anketi Kapat' %></button>
+            </form>
+            <form method="post" action="/classes/<%= classBranch %>/polls/<%= poll.id %>/delete" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn danger small">Sil</button>
+            </form>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<% if (featureFlags.class_timeline !== false) { %><section class="card">
+  <h2>Öğrenciler</h2>
+  <% if (!students.length) { %>
+    <p>Bu sınıfta öğrenci bulunamadı.</p>
+  <% } else { %>
+    <div class="profile-grid">
+      <% students.forEach(function(student) { %>
+        <a href="/profiles/<%= student.id %>" class="profile-card">
+          <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" loading="lazy" />
+          <h3><%= student.name %></h3>
+          <% if (student.president_class_branch) { %><p class="class-president-inline">Sınıf Başkanı</p><% } %>
+          <p><strong>No:</strong> <%= student.student_number || '-' %></p>
+          <% if (student.slogan) { %>
+            <p><strong>Slogan:</strong> <%= student.slogan %></p>
+          <% } else if (student.favorite_quote) { %>
+            <p><strong>Alıntı:</strong> <%= student.favorite_quote %></p>
+          <% } else { %>
+            <p><strong>Slogan:</strong> Henüz slogan yok.</p>
+          <% } %>
+          <% if (currentUser.role === 'admin') { %>
+            <p class="subtle"><%= student.has_photo ? 'Foto var' : 'Foto yok' %> / <%= student.has_slogan ? 'Slogan var' : 'Slogan yok' %></p>
+          <% } %>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<% if (featureFlags.class_memories !== false) { %><section class="card">
+  <h2>Sınıf Zaman Çizelgesi</h2>
+  <p class="subtle">Zaman çizelgesini yalnızca yönetici veya <%= classBranch %> sınıf başkanı güncelleyebilir.</p>
+  <% if (canEditClassPage) { %>
+    <form method="post" action="/classes/<%= classBranch %>/timeline" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <input name="title" maxlength="120" placeholder="Ör. Mezuniyet provası" required />
+      <input name="happened_on" maxlength="20" placeholder="Ör. 2026-05-20" />
+      <textarea name="body" maxlength="1200" placeholder="Kısa açıklama" required></textarea>
+      <button type="submit" class="btn">Zaman Çizelgesine Ekle</button>
+    </form>
+  <% } %>
+  <% if (!timelineEntries.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz zaman çizelgesi kaydı yok</h3>
+      <p>Sınıfın önemli anlarını buraya ekleyebilirsiniz.</p>
+    </div>
+  <% } else { %>
+    <div class="timeline-list compact-top">
+      <% timelineEntries.forEach(function(item) { %>
+        <article class="timeline-card">
+          <p class="eyebrow"><%= item.happened_on || item.created_at %></p>
+          <h3><%= item.title %></h3>
+          <p><%= item.body %></p>
+          <small><%= item.author_name %></small>
+          <% if (canEditClassPage) { %>
+            <form method="post" action="/classes/<%= classBranch %>/timeline/<%= item.id %>/delete" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn danger small">Sil</button>
+            </form>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+</section><% } %>
+
+<section class="card">
+  <h2>Sınıf Anıları</h2>
+  <p class="subtle">Bu sınıftaki öğrenciler ve yöneticiler anı paylaşabilir.</p>
+  <% if (canPostClassMemory) { %>
+    <form method="post" action="/classes/<%= classBranch %>/memories" class="stack-form compact-top">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <textarea name="body" maxlength="1500" placeholder="Bu sınıftan unutulmaz bir anı yaz" required></textarea>
+      <button type="submit" class="btn alt">Anı Ekle</button>
+    </form>
+  <% } %>
+  <% if (!classMemories.length) { %>
+    <div class="empty-state compact-top">
+      <h3>Henüz sınıf anısı yok</h3>
+      <p>İlk anıyı bu sınıftan bir öğrenci veya yönetici ekleyebilir.</p>
+    </div>
+  <% } else { %>
+    <div class="stack-list compact-top">
+      <% classMemories.forEach(function(item) { %>
+        <div class="notice">
+          <p><%= item.body %></p>
+          <p class="subtle"><%= item.author_name %> - <%= item.created_at %></p>
+          <% if (currentUser.role === 'admin' || (currentUser.role === 'student' && ((currentUser.class_branch === classBranch && currentUser.president_class_branch === classBranch) || currentUser.id === item.created_by_user_id))) { %>
+            <form method="post" action="/classes/<%= classBranch %>/memories/<%= item.id %>/delete" class="inline-action-form compact-top">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+              <button type="submit" class="btn danger small">Sil</button>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</section>
+ </div>
+<%- include('partials/footer') %>

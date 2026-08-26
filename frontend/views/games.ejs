@@ -1,0 +1,139 @@
+<%- include('partials/header', { title, currentUser, csrfToken, flash, cspNonce }) %>
+
+<section class="card games-hero">
+  <p class="eyebrow">Oyunlarımız</p>
+  <h1>Yıllık Arası Mola</h1>
+  <p class="subtle">Aşağıdaki oyunları deneyebilirsin.</p>
+</section>
+
+<%
+  const gameFlags = featureFlags || {};
+  const isGameVisible = (key) => gameFlags[key] !== false;
+  const specialCards = [
+    {
+      flag: 'game_nane_okey_pc',
+      eyebrow: 'Windows Oyunu',
+      name: 'Nane Okey PC',
+      description: 'Eski usul masaüstü okey oyunu. Butona basınca indirme bağlantısı yeni sekmede açılır.',
+      href: 'https://archive.org/download/nane-okey/NaneOkey.exe',
+      image: '/public/images/nane-okey-pc.svg',
+      buttonText: 'Nane Okey PC İndir'
+    },
+    {
+      flag: 'game_wiibatak',
+      eyebrow: 'Harici Uygulama',
+      name: 'Wiibatak',
+      description: 'WiiBatak uygulamasını dış bağlantı olarak aç.',
+      href: 'https://oscwii.org/library/app/wiibatak',
+      image: '/public/images/wiibatak.svg',
+      buttonText: 'Wiibatak Aç'
+    },
+    {
+      flag: 'game_kenan',
+      eyebrow: 'Sunucu Oyunu',
+      name: 'Kenan',
+      description: 'Kenan hocanın fikriydi.',
+      href: '/games/kenan/play/',
+      image: '/public/images/kenan-desert.svg',
+      buttonText: 'Kenan\'ı Oyna'
+    },
+    {
+      flag: 'game_reversi',
+      eyebrow: 'Online Masa Oyunu',
+      name: 'Reversi',
+      description: 'Yıllık hesabındaki adınla PC’ye karşı veya oda koduyla arkadaşına karşı oyna.',
+      href: '/games/reversi/play/',
+      image: '/public/images/reversi.svg',
+      buttonText: 'Reversi Oyna'
+    },
+    {
+      flag: 'game_lingo',
+      eyebrow: 'Online Masa Oyunu',
+      name: 'Lingo',
+      description: '4, 5, 6 ve 7 harf seçenekleriyle kelimeyi tahmin et.',
+      href: '/games/lingo/play/',
+      image: '/public/images/lingo.svg',
+      buttonText: 'Lingo Oyna'
+    },
+    {
+      flag: 'game_koi_koi',
+      eyebrow: 'Online Masa Oyunu',
+      name: 'Koi Koi',
+      description: '2 kişilik kart oyununda kombinasyon kur, turu kapat ve puanı al.',
+      href: '/games/koi-koi/play/',
+      image: '/public/images/koi-koi.svg',
+      buttonText: 'Koi Koi Oyna'
+    }
+  ];
+  const boardGames = [
+    { flag: 'game_xox', slug: 'xox', name: 'XOX', description: 'Üç kareyi yan yana getir.', href: '/games/xox/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_sos', slug: 'sos', name: 'SOS', description: 'Harfleri diz, SOS yakala.', href: '/games/sos/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_kutu_doldurmaca', slug: 'kutu-doldurmaca', name: 'Kutu Doldurmaca', description: 'Çizgileri tamamla, kutuları kap.', href: '/games/kutu-doldurmaca/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_yilanlar_ve_merdivenler', slug: 'yilanlar-ve-merdivenler', name: 'Yılanlar ve Merdivenler', description: 'Zar at, merdivenden çık, yılandan kaç.', href: '/games/yilanlar-ve-merdivenler/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_9_tas', slug: '9-tas', name: '9 Taş', description: 'Değirmen kur, rakibin taşını azalt.', href: '/games/9-tas/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_3_tas', slug: '3-tas', name: '3 Taş', description: 'Hızlı taş dizme ve hamle oyunu.', href: '/games/3-tas/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_dama', slug: 'dama', name: 'Dama', description: 'Taşlarını ilerlet, rakibi bitir.', href: '/games/dama/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_capraz_dama', slug: 'capraz-dama', name: 'Çapraz Dama', description: 'Çapraz hamleli dama varyasyonu.', href: '/games/capraz-dama/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_mangala', slug: 'mangala', name: 'Mangala', description: 'Kuyulardaki taşları topla.', href: '/games/mangala/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_kuyulamac', slug: 'kuyulamac', name: 'Kuyulamaç', description: 'Tarihi Kastamonu oyunu.', href: '/games/kuyulamac/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_alti', slug: 'alti', name: 'Altı', description: 'Altıgen hatları birleştir, bağlantıyı rakibinden önce kur.', href: '/games/alti/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_nane_okey', slug: 'nane-okey', name: 'Nane Okey', description: 'Rummikub tarzı seri kurma oyunu.', href: '/games/nane-okey/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_okey', slug: 'okey', name: 'Okey', description: 'Dört kişilik klasik taş oyunu.', href: '/games/okey/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_101_okey', slug: '101-okey', name: '101 Okey', description: 'Seri aç, 101 puanı geç ve elde kalanı bitir.', href: '/games/101-okey/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_uno', slug: 'uno', name: 'UNO', description: 'Renk ve kart türünü eşleştir, özel kartlarla akışı boz.', href: '/games/uno/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_batak', slug: 'batak', name: 'Batak', description: 'İhaleyi al, kozu seç ve elleri topla.', href: '/games/batak/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_siseler', slug: 'siseler', name: 'Şişeler', description: 'Şişeleri renklerine göre doğru sıraya ayır.', href: '/games/siseler/play/', playText: 'Tek kişilik oynanır.' },
+    { flag: 'game_otopark', slug: 'otopark', name: 'Otopark', description: 'Unblock Red Wood tarzı blokları kaydır.', href: '/games/otopark/play/', playText: 'Tek kişilik oynanır.' },
+    { flag: 'game_sudoku', slug: 'sudoku', name: 'Sudoku', description: '9x9 tabloyu tekrar etmeden tamamla.', href: '/games/sudoku/play/', playText: 'Tek kişilik oynanır.' },
+    { flag: 'game_kakuro', slug: 'kakuro', name: 'Kakuro', description: 'İpucu toplamlarına göre sayı gruplarını doldur.', href: '/games/kakuro/play/', playText: 'Tek kişilik oynanır.' },
+    { flag: 'game_kare_karala', slug: 'kare-karala', name: 'Kare Karala', description: 'Satır ve sütun ipuçlarına göre resmi ortaya çıkar.', href: '/games/kare-karala/play/', playText: 'Tek kişilik oynanır.' },
+    { flag: 'game_scrabble', slug: 'scrabble', name: 'Scrabble', description: 'Türkçe kelimeleri tahtaya yerleştir, puan topla.', href: '/games/scrabble/play/', playText: 'İki kişilik sırayla aynı cihazda oynanır.' },
+    { flag: 'game_abalone', slug: 'abalone', name: 'Abalone', description: 'Bilyeleri it, rakibi dışarı çıkar.', href: '/games/abalone/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_tavla', slug: 'tavla', name: 'Tavla', description: 'Zarla pulları topla.', href: '/games/tavla/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_koridor', slug: 'koridor', name: 'Koridor', description: 'Duvar koy, hedef çizgiye ulaş.', href: '/games/koridor/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_satranc', slug: 'satranc', name: 'Satranç', description: 'Klasik strateji oyunu.', href: '/games/satranc/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_dortlu_birlestir', slug: 'dortlu-birlestir', name: '4lü Birleştir', description: 'Dört taşı yan yana getir.', href: '/games/dortlu-birlestir/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_mastermind', slug: 'mastermind', name: 'Mastermind', description: '5 haneli gizli renk kodunu çöz.', href: '/games/mastermind/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_domino', slug: 'domino', name: 'Domino', description: 'Uçlara uygun taşı yerleştir.', href: '/games/domino/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_go', slug: 'go', name: 'Go', description: 'Taş koy, alan ve esir üstünlüğü kur.', href: '/games/go/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' },
+    { flag: 'game_kizma_birader', slug: 'kizma-birader', name: 'Kızma Birader', description: 'Dört piyonunu bitişe taşı.', href: '/games/kizma-birader/play/', playText: 'PC’ye karşı veya oda koduyla oynanır.' }
+  ];
+%>
+
+<section class="games-grid">
+  <% specialCards.forEach(function(card) { if (!isGameVisible(card.flag)) return; %>
+    <article class="card game-card">
+      <a class="game-cover" href="<%= card.href %>" target="<%= card.href.startsWith('http') ? '_blank' : '_self' %>" rel="<%= card.href.startsWith('http') ? 'noopener noreferrer' : '' %>">
+        <img src="<%= card.image %>" alt="<%= card.name %> görseli" loading="lazy" />
+      </a>
+      <div class="game-card-body">
+        <p class="eyebrow"><%= card.eyebrow %></p>
+        <h2><%= card.name %></h2>
+        <p><%= card.description %></p>
+        <a class="btn alt" href="<%= card.href %>" target="<%= card.href.startsWith('http') ? '_blank' : '_self' %>" rel="<%= card.href.startsWith('http') ? 'noopener noreferrer' : '' %>"><%= card.buttonText %></a>
+      </div>
+    </article>
+  <% }) %>
+
+  <% boardGames.forEach(function(game) { if (!isGameVisible(game.flag)) return; %>
+    <article class="card game-card">
+      <a class="game-cover" href="<%= game.href %>">
+        <img src="/public/images/<%= game.slug %>.svg" alt="<%= game.name %> oyun görseli" loading="lazy" />
+      </a>
+      <div class="game-card-body">
+        <p class="eyebrow">Online Masa Oyunu</p>
+        <h2><%= game.name %></h2>
+        <p><%= game.description %> <%= game.playText %></p>
+        <a class="btn alt" href="<%= game.href %>"><%= game.name %> Oyna</a>
+      </div>
+    </article>
+  <% }) %>
+</section>
+
+<section class="card compact-top">
+  <div class="inline-actions">
+    <a class="btn small alt" href="/">Ana Sayfaya Dön</a>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

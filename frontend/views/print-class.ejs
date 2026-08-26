@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/public/css/styles.css" />
+  </head>
+  <body class="print-page">
+    <main class="container main-content">
+      <section class="card">
+        <h1><%= classBranch %> Yazdırma Görünümü</h1>
+        <% if (classPage && (classPage.cover_photo_path || classPage.class_slogan)) { %>
+          <div class="compact-top">
+            <% if (classPage.cover_photo_path) { %>
+              <img src="<%= classPage.cover_photo_path %>" alt="<%= classBranch %> kapak fotoğrafı" class="profile-photo" />
+            <% } %>
+            <% if (classPage.class_slogan) { %>
+              <p><strong>Sınıf Sloganı:</strong> <%= classPage.class_slogan %></p>
+            <% } %>
+          </div>
+        <% } %>
+        <div class="profile-grid">
+          <% students.forEach(function(student) { %>
+            <div class="profile-card">
+              <img src="<%= student.photo_path || '/public/default-avatar.svg' %>" alt="<%= student.name %>" />
+              <h3><%= student.name %></h3>
+              <p><%= student.student_number || '-' %></p>
+              <p><%= student.slogan || 'Henüz slogan yok.' %></p>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    </main>
+    <script nonce="<%= cspNonce %>">window.print();</script>
+  </body>
+</html>
