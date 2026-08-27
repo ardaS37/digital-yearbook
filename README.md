@@ -1,3 +1,4 @@
+
 # Digital Yearbook
 
 Digital Yearbook is a server-rendered web application for creating private school yearbooks. It supports role-based access, student and teacher profiles, moderated messages, class pages, photo galleries, consent flows, and offline export.
@@ -49,3 +50,9 @@ npm test
 ## License
 
 No license is granted. All rights reserved.
+
+
+## Images
+<img width="1919" height="1070" alt="Screenshot 2026-08-27 120956" src="https://github.com/user-attachments/assets/3e84d541-babe-4bf0-8a95-2623470c817d" />
+<img width="1911" height="1074" alt="Screenshot 2026-08-27 120932" src="https://github.com/user-attachments/assets/4adf1de5-1b23-4980-87b1-d863ae1a1cf7" />
+<img width="1912" height="1068" alt="Screenshot 2026-08-27 121004" src="https://github.com/user-attachments/assets/8e49d1ac-054c-4b21-a614-f5070ebf36de" />
